@@ -1,0 +1,68 @@
+X-Middleware-Subrequest
+X-mIdDlEwArE-sUbReQuEsT
+x-middleware-subrequest
+X-MIDDLEWARE-SUBREQUEST
+x-middleware-subrequest:
+x-middleware-subrequest :
+x-middleware-subrequest\t:
+x-middleware-subrequest\r:
+x-middleware-subrequest\n:
+x-middleware-subrequest\v:
+x-middleware-subrequest\f:
+Connection: x-middleware-subrequest
+Connection: close, x-middleware-subrequest
+Connection: keep-alive, x-middleware-subrequest
+Proxy-Connection: x-middleware-subrequest
+TE: x-middleware-subrequest
+%78-middleware-subrequest
+%58-middleware-subrequest
+\u0078-middleware-subrequest
+x-mіddleware-subrequest
+[x-middleware-subrequest]
+"x-middleware-subrequest"
+'x-middleware-subrequest'
+x-middleware-subrequest: dummy, x-middleware-subrequest: middleware
+x-middleware-subrequest: middleware, x-middleware-subrequest: dummy
+X-Forwarded-For: 127.0.0.1, x-middleware-subrequest: middleware
+X-Real-IP: 127.0.0.1, x-middleware-subrequest: middleware
+x-middleware-subrequest\x00
+x-middleware-subrequest\x0b
+x-middleware-subrequest\x0c
+x-middleware-subrequest\x20
+x-middleware-subrequest\x09
+x-middleware-subrequest\r\n
+x-middleware-subrequest\n
+x-middleware-subrequest\r
+\r\n\r\nGET /data-capture-admin HTTP/1.1\r\nx-middleware-subrequest
+\r\nGET /data-capture-admin HTTP/1.1\r\nx-middleware-subrequest
+\nGET /data-capture-admin HTTP/1.1\n\nx-middleware-subrequest
+__next_middleware_response
+x-nextjs-cache
+x-vercel-id
+x-middleware-next
+x-middleware-rewrite
+x-middleware-redirect
+X-mIdDlEwArE-sUbReQuEsT: middleware
+x-middleware-subrequest\t: middleware
+x-middleware-subrequest\v: middleware
+x-middleware-subrequest\f: middleware
+x-middleware-subrequest\r\n: middleware
+x-middleware-subrequest\u0000: middleware
+x-middleware-subrequest\u0009: middleware
+x-middleware-subrequest\u0020: middleware
+x-middleware-subrequest\u00a0: middleware
+x-middleware-subrequest\u1680: middleware
+x-middleware-subrequest\u2000: middleware
+x-middleware-subrequest\u2001: middleware
+x-middleware-subrequest\u2002: middleware
+x-middleware-subrequest\u2003: middleware
+x-middleware-subrequest\u2004: middleware
+x-middleware-subrequest\u2005: middleware
+x-middleware-subrequest\u2006: middleware
+x-middleware-subrequest\u2007: middleware
+x-middleware-subrequest\u2008: middleware
+x-middleware-subrequest\u2009: middleware
+x-middleware-subrequest\u200a: middleware
+x-middleware-subrequest\u202f: middleware
+x-middleware-subrequest\u205f: middleware
+x-middleware-subrequest\u3000: middleware
