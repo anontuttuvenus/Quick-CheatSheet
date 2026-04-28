@@ -60,3 +60,55 @@ Middleware:middleware
 middleware:Middleware:middleware
 MIDDLEWARE:middleware:MIDDLEWARE
 middleware:middleware:middleware:middleware:middleware:middleware
+
+
+
+x-middleware-invoke: middleware
+x-middleware-invoke: src/middleware
+x-middleware-invoke: 1
+
+x-nextjs-data: 1
+x-nextjs-data: true
+
+x-nextjs-page: /data-capture-admin
+x-nextjs-page: /offers
+x-nextjs-page: /pwt
+x-nextjs-page: /onboarding
+
+x-next-page: /data-capture-admin
+x-next-page: /offers
+
+x-matched-path: /data-capture-admin
+x-matched-path: /api/data-capture-admin
+x-matched-path: /offers
+
+x-invoke-path: /data-capture-admin
+x-invoke-path: /api/data-capture-admin
+
+x-invoke-query: {}
+x-invoke-query: %7B%7D
+
+x-invoke-output: /data-capture-admin
+
+x-middleware-rewrite: https://uat.adminportal.airmiles.ca/data-capture-admin
+x-middleware-rewrite: /data-capture-admin
+
+x-nextjs-matched-path: /data-capture-admin
+x-nextjs-matched-path: /offers
+
+x-now-route-matches: 1
+
+x-vercel-internal: 1
+x-vercel-internal: true
+
+x-vercel-id: 1
+
+x-nextjs-cache: BYPASS
+x-nextjs-cache: MISS
+
+x-forwarded-host: uat.adminportal.airmiles.ca
+x-forwarded-host: localhost
+x-forwarded-host: 127.0.0.1
+
+x-real-ip: 127.0.0.1
+x-forwarded-for: 127.0.0.1
