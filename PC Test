@@ -1,0 +1,312 @@
+# ============================================================
+#  PC HEALTH CHECK - EASY RESULTS
+#  Run as Administrator for best results
+#  A clear report will open automatically when done
+# ============================================================
+
+$ReportFile = "$env:USERPROFILE\Desktop\PC_HealthCheck.txt"
+$PassCount = 0
+$FailCount = 0
+$WarnCount = 0
+$Results = @()
+
+function AddResult($category, $label, $status, $detail) {
+    # status: PASS, FAIL, WARN
+    $icon = switch ($status) {
+        "PASS" { "âœ… PASS" }
+        "FAIL" { "âŒ FAIL" }
+        "WARN" { "âš ï¸  WARN" }
+    }
+    $script:Results += [PSCustomObject]@{
+        Category = $category
+        Label    = $label
+        Status   = $status
+        Icon     = $icon
+        Detail   = $detail
+    }
+    if ($status -eq "PASS") { $script:PassCount++ }
+    elseif ($status -eq "FAIL") { $script:FailCount++ }
+    else { $script:WarnCount++ }
+}
+
+Write-Host ""
+Write-Host "  Running PC Health Check... please wait" -ForegroundColor Cyan
+Write-Host ""
+
+# â”€â”€ WINDOWS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+try {
+    $os = Get-CimInstance Win32_OperatingSystem
+    $cs = Get-CimInstance Win32_ComputerSystem
+
+    # Windows Activation
+    $license = (Get-CimInstance SoftwareLicensingProduct -Filter "Name like 'Windows%' and PartialProductKey is not null" -ErrorAction SilentlyContinue).LicenseStatus
+    if ($license -eq 1) {
+        AddResult "Windows" "Windows Activated" "PASS" "$($os.Caption)"
+    } else {
+        AddResult "Windows" "Windows Activated" "FAIL" "Windows is NOT activated - ask seller to fix this"
+    }
+
+    # Windows Version
+    $build = [int]$os.BuildNumber
+    if ($build -ge 22000) {
+        AddResult "Windows" "Windows 11" "PASS" "Build $build"
+    } elseif ($build -ge 19041) {
+        AddResult "Windows" "Windows 10" "WARN" "Windows 10 - consider upgrading to 11"
+    } else {
+        AddResult "Windows" "Windows Version" "FAIL" "Old Windows build $build - needs update"
+    }
+} catch {
+    AddResult "Windows" "Windows Info" "FAIL" "Could not read Windows info"
+}
+
+# â”€â”€ CPU â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+try {
+    $cpu = Get-CimInstance Win32_Processor
+
+    # CPU Model check
+    if ($cpu.Name -like "*i7*") {
+        AddResult "CPU" "CPU is Intel i7" "PASS" "$($cpu.Name)"
+    } elseif ($cpu.Name -like "*i5*" -or $cpu.Name -like "*i9*") {
+        AddResult "CPU" "CPU Model" "WARN" "Found $($cpu.Name) - expected i7"
+    } else {
+        AddResult "CPU" "CPU Model" "FAIL" "Unexpected CPU: $($cpu.Name)"
+    }
+
+    # Core count
+    if ($cpu.NumberOfCores -ge 8) {
+        AddResult "CPU" "CPU Cores ($($cpu.NumberOfCores) cores)" "PASS" "$($cpu.NumberOfCores) cores / $($cpu.NumberOfLogicalProcessors) threads"
+    } else {
+        AddResult "CPU" "CPU Cores" "WARN" "Only $($cpu.NumberOfCores) cores found"
+    }
+
+    # CPU Load at idle
+    Start-Sleep -Seconds 2
+    $load = (Get-CimInstance Win32_Processor).LoadPercentage
+    if ($load -lt 30) {
+        AddResult "CPU" "CPU Idle (not overloaded)" "PASS" "$load% usage at idle - healthy"
+    } elseif ($load -lt 70) {
+        AddResult "CPU" "CPU Idle Load" "WARN" "$load% at idle - some background apps running"
+    } else {
+        AddResult "CPU" "CPU Idle Load" "FAIL" "$load% at idle - something is eating CPU, investigate"
+    }
+} catch {
+    AddResult "CPU" "CPU Check" "FAIL" "Could not read CPU info"
+}
+
+# â”€â”€ RAM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+try {
+    $os2 = Get-CimInstance Win32_OperatingSystem
+    $totalRAM = [math]::Round($os2.TotalVisibleMemorySize / 1MB, 1)
+    $freeRAM  = [math]::Round($os2.FreePhysicalMemory / 1MB, 1)
+    $usedPct  = [math]::Round((($totalRAM - $freeRAM) / $totalRAM) * 100, 0)
+
+    # RAM size
+    if ($totalRAM -ge 28) {
+        AddResult "RAM" "RAM Size is 32GB" "PASS" "$totalRAM GB detected"
+    } elseif ($totalRAM -ge 14) {
+        AddResult "RAM" "RAM Size" "WARN" "Only $totalRAM GB - should be 32GB"
+    } else {
+        AddResult "RAM" "RAM Size" "FAIL" "Only $totalRAM GB - too low!"
+    }
+
+    # RAM usage at idle
+    if ($usedPct -lt 60) {
+        AddResult "RAM" "RAM Usage Normal" "PASS" "$usedPct% used at idle"
+    } elseif ($usedPct -lt 85) {
+        AddResult "RAM" "RAM Usage" "WARN" "$usedPct% used at idle - a lot of background apps"
+    } else {
+        AddResult "RAM" "RAM Usage" "FAIL" "$usedPct% used at idle - memory problem or too many apps"
+    }
+
+    # RAM speed
+    $ramSticks = Get-CimInstance Win32_PhysicalMemory
+    $ramSpeed = ($ramSticks | Select-Object -First 1).Speed
+    if ($ramSpeed -ge 2666) {
+        AddResult "RAM" "RAM Speed ($ramSpeed MHz)" "PASS" "RAM speed is good"
+    } else {
+        AddResult "RAM" "RAM Speed" "WARN" "RAM speed is $ramSpeed MHz - a bit slow"
+    }
+} catch {
+    AddResult "RAM" "RAM Check" "FAIL" "Could not read RAM info"
+}
+
+# â”€â”€ GPU â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+try {
+    $gpus = Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notlike "*Basic*" -and $_.Name -notlike "*Remote*" }
+    $mainGPU = $gpus | Where-Object { $_.Name -like "*NVIDIA*" -or $_.Name -like "*Radeon*" } | Select-Object -First 1
+
+    if ($null -eq $mainGPU) { $mainGPU = $gpus | Select-Object -First 1 }
+
+    # GPU model
+    if ($mainGPU.Name -like "*4060*") {
+        AddResult "GPU" "GPU is RTX 4060 Ti" "PASS" "$($mainGPU.Name)"
+    } else {
+        AddResult "GPU" "GPU Model" "WARN" "Found: $($mainGPU.Name) - verify this is correct"
+    }
+
+    # Driver check
+    if ($mainGPU.DriverVersion -ne $null) {
+        AddResult "GPU" "GPU Driver Installed" "PASS" "Driver version $($mainGPU.DriverVersion)"
+    } else {
+        AddResult "GPU" "GPU Driver" "FAIL" "No GPU driver found - needs NVIDIA driver install"
+    }
+
+    # VRAM note
+    AddResult "GPU" "VRAM (needs GPU-Z to confirm)" "WARN" "Windows can't fully read VRAM - use GPU-Z to confirm 16GB"
+
+} catch {
+    AddResult "GPU" "GPU Check" "FAIL" "Could not read GPU info"
+}
+
+# â”€â”€ STORAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+try {
+    $disks = Get-CimInstance Win32_DiskDrive
+    $totalDiskGB = [math]::Round(($disks | Measure-Object -Property Size -Sum).Sum / 1GB, 0)
+
+    if ($totalDiskGB -ge 900) {
+        AddResult "Storage" "Storage Size (~1TB)" "PASS" "$totalDiskGB GB total storage found"
+    } elseif ($totalDiskGB -ge 400) {
+        AddResult "Storage" "Storage Size" "WARN" "Only $totalDiskGB GB - expected ~1TB"
+    } else {
+        AddResult "Storage" "Storage Size" "FAIL" "Only $totalDiskGB GB storage - very low"
+    }
+
+    # C drive free space
+    $cDrive = Get-PSDrive C -ErrorAction SilentlyContinue
+    if ($cDrive) {
+        $freeGB = [math]::Round($cDrive.Free / 1GB, 1)
+        $totalGB = [math]::Round(($cDrive.Used + $cDrive.Free) / 1GB, 1)
+        $usedPct = [math]::Round(($cDrive.Used / ($cDrive.Used + $cDrive.Free)) * 100, 0)
+        if ($usedPct -lt 80) {
+            AddResult "Storage" "C: Drive Space ($freeGB GB free)" "PASS" "$usedPct% used - $freeGB GB free of $totalGB GB"
+        } elseif ($usedPct -lt 90) {
+            AddResult "Storage" "C: Drive Space" "WARN" "$usedPct% used - only $freeGB GB free"
+        } else {
+            AddResult "Storage" "C: Drive Space" "FAIL" "Drive is $usedPct% full! Only $freeGB GB free"
+        }
+    }
+} catch {
+    AddResult "Storage" "Storage Check" "FAIL" "Could not read storage info"
+}
+
+# â”€â”€ NETWORK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+try {
+    $ping = Test-Connection -ComputerName 8.8.8.8 -Count 3 -ErrorAction SilentlyContinue
+    if ($ping) {
+        $avg = [math]::Round(($ping | Measure-Object -Property ResponseTime -Average).Average, 0)
+        if ($avg -lt 50) {
+            AddResult "Network" "Internet Connected" "PASS" "Ping $avg ms - excellent"
+        } elseif ($avg -lt 100) {
+            AddResult "Network" "Internet Connected" "PASS" "Ping $avg ms - good"
+        } else {
+            AddResult "Network" "Internet Connected" "WARN" "Ping $avg ms - slow connection"
+        }
+    } else {
+        AddResult "Network" "Internet Connected" "FAIL" "No internet - check cable or WiFi"
+    }
+} catch {
+    AddResult "Network" "Network Check" "FAIL" "Could not test network"
+}
+
+# â”€â”€ SECURITY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+try {
+    $defender = Get-MpComputerStatus -ErrorAction SilentlyContinue
+    if ($defender) {
+        if ($defender.RealTimeProtectionEnabled) {
+            AddResult "Security" "Antivirus Active" "PASS" "Windows Defender real-time protection ON"
+        } else {
+            AddResult "Security" "Antivirus Active" "FAIL" "Windows Defender is OFF - turn it on!"
+        }
+    } else {
+        AddResult "Security" "Antivirus" "WARN" "Could not check Defender status"
+    }
+} catch {
+    AddResult "Security" "Security Check" "WARN" "Could not read security status"
+}
+
+# â”€â”€ BLOATWARE / STARTUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+try {
+    $startupItems = Get-CimInstance Win32_StartupCommand
+    $count = $startupItems.Count
+    if ($count -le 8) {
+        AddResult "Bloat" "Startup Programs ($count items)" "PASS" "Clean startup - not too many background apps"
+    } elseif ($count -le 15) {
+        AddResult "Bloat" "Startup Programs ($count items)" "WARN" "Quite a few startup apps - may slow boot"
+    } else {
+        AddResult "Bloat" "Startup Programs ($count items)" "FAIL" "$count startup apps! PC will be slow to boot"
+    }
+} catch {
+    AddResult "Bloat" "Startup Check" "WARN" "Could not check startup programs"
+}
+
+# â”€â”€ BUILD THE REPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+$totalTests = $PassCount + $FailCount + $WarnCount
+$scorePercent = [math]::Round(($PassCount / $totalTests) * 100, 0)
+
+$report = @()
+$report += "â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—"
+$report += "â•‘           PC HEALTH CHECK REPORT                        â•‘"
+$report += "â•‘           $((Get-Date).ToString('yyyy-MM-dd  HH:mm'))                              â•‘"
+$report += "â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•"
+$report += ""
+
+# Final verdict
+if ($FailCount -eq 0 -and $WarnCount -le 2) {
+    $verdict = "ðŸŸ¢  THIS PC LOOKS GREAT - GOOD TO BUY!"
+} elseif ($FailCount -eq 0) {
+    $verdict = "ðŸŸ¡  PC IS OK - CHECK THE WARNINGS BELOW"
+} elseif ($FailCount -le 2) {
+    $verdict = "ðŸŸ   SOME ISSUES FOUND - READ FAILS CAREFULLY"
+} else {
+    $verdict = "ðŸ”´  SERIOUS PROBLEMS - DO NOT BUY WITHOUT FIXING"
+}
+
+$report += "  $verdict"
+$report += ""
+$report += "  Score: $PassCount passed / $totalTests checks   ($scorePercent% healthy)"
+$report += "  âœ… PASS: $PassCount    âš ï¸  WARN: $WarnCount    âŒ FAIL: $FailCount"
+$report += ""
+$report += "â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•"
+$report += ""
+
+# Group by category
+$categories = $Results | Select-Object -ExpandProperty Category -Unique
+foreach ($cat in $categories) {
+    $report += "  â”€â”€ $cat â”€â”€"
+    $catResults = $Results | Where-Object { $_.Category -eq $cat }
+    foreach ($r in $catResults) {
+        $report += "  $($r.Icon)  $($r.Label)"
+        $report += "           â†’ $($r.Detail)"
+    }
+    $report += ""
+}
+
+$report += "â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•"
+$report += ""
+$report += "  ðŸ“‹ MANUAL CHECKS STILL NEEDED:"
+$report += ""
+$report += "  ðŸ”² GPU-Z  â†’ Confirm GPU shows 16GB VRAM"
+$report += "       Download: https://www.techpowerup.com/gpuz/"
+$report += ""
+$report += "  ðŸ”² CrystalDiskInfo â†’ SSD should say 'Good' or 'Caution'"
+$report += "       Download: https://crystalmark.info/en/software/crystaldiskinfo/"
+$report += ""
+$report += "  ðŸ”² HWiNFO64 â†’ Check CPU/GPU temps under load"
+$report += "       Download: https://www.hwinfo.com/download/"
+$report += "       CPU should stay under 85Â°C, GPU under 83Â°C"
+$report += ""
+$report += "â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•"
+$report += "  Report saved to Desktop: PC_HealthCheck.txt"
+$report += "â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•"
+
+# Print to screen
+Clear-Host
+$report | ForEach-Object { Write-Host $_ }
+
+# Save to file
+$report | Out-File -FilePath $ReportFile -Encoding UTF8
+
+Write-Host ""
+Write-Host "  âœ… Full report saved to your Desktop as PC_HealthCheck.txt" -ForegroundColor Green
+Write-Host ""
+Pause
