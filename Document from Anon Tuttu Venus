@@ -1,0 +1,206 @@
+# ============================================================
+# PC HEALTH CHECK - CLEAN VERSION
+# Run as Administrator for best results
+# ============================================================
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
+$ReportFile = "$env:USERPROFILE\Desktop\PC_HealthCheck.txt"
+$PassCount = 0
+$FailCount = 0
+$WarnCount = 0
+$Results = @()
+
+function AddResult($category, $label, $status, $detail) {
+    $icon = switch ($status) {
+        "PASS" { "[PASS]" }
+        "FAIL" { "[FAIL]" }
+        "WARN" { "[WARN]" }
+    }
+    
+    $script:Results += [PSCustomObject]@{
+        Category = $category
+        Label    = $label
+        Status   = $status
+        Icon     = $icon
+        Detail   = $detail
+    }
+
+    if ($status -eq "PASS") { $script:PassCount++ }
+    elseif ($status -eq "FAIL") { $script:FailCount++ }
+    else { $script:WarnCount++ }
+}
+
+Write-Host ""
+Write-Host "Running PC Health Check..." -ForegroundColor Cyan
+Write-Host ""
+
+# ---------------- WINDOWS ----------------
+try {
+    $os = Get-CimInstance Win32_OperatingSystem
+    $license = (Get-CimInstance SoftwareLicensingProduct -Filter "Name like 'Windows%' and PartialProductKey is not null" -ErrorAction SilentlyContinue).LicenseStatus
+    
+    if ($license -eq 1) {
+        AddResult "Windows" "Windows Activated" "PASS" "$($os.Caption)"
+    } else {
+        AddResult "Windows" "Windows Activated" "FAIL" "Windows is NOT activated"
+    }
+
+    $build = [int]$os.BuildNumber
+    if ($build -ge 22000) {
+        AddResult "Windows" "Windows 11" "PASS" "Build $build"
+    } elseif ($build -ge 19041) {
+        AddResult "Windows" "Windows 10" "WARN" "Consider upgrading to Windows 11"
+    } else {
+        AddResult "Windows" "Windows Version" "FAIL" "Outdated build $build"
+    }
+} catch {
+    AddResult "Windows" "Windows Info" "FAIL" "Could not read Windows info"
+}
+
+# ---------------- CPU ----------------
+try {
+    $cpu = Get-CimInstance Win32_Processor
+    if ($cpu.Name -like "*i7*") {
+        AddResult "CPU" "CPU Model" "PASS" $cpu.Name
+    } elseif ($cpu.Name -like "*i5*" -or $cpu.Name -like "*i9*") {
+        AddResult "CPU" "CPU Model" "WARN" $cpu.Name
+    } else {
+        AddResult "CPU" "CPU Model" "FAIL" $cpu.Name
+    }
+
+    if ($cpu.NumberOfCores -ge 8) {
+        AddResult "CPU" "CPU Cores" "PASS" "$($cpu.NumberOfCores) cores"
+    } else {
+        AddResult "CPU" "CPU Cores" "WARN" "$($cpu.NumberOfCores) cores"
+    }
+
+    $load = $cpu.LoadPercentage
+    if ($load -lt 30) {
+        AddResult "CPU" "CPU Load" "PASS" "$load% load"
+    } elseif ($load -lt 70) {
+        AddResult "CPU" "CPU Load" "WARN" "$load% load"
+    } else {
+        AddResult "CPU" "CPU Load" "FAIL" "$load% load"
+    }
+} catch {
+    AddResult "CPU" "CPU Check" "FAIL" "Could not read CPU info"
+}
+
+# ---------------- RAM ----------------
+try {
+    $os2 = Get-CimInstance Win32_OperatingSystem
+    $totalRAM = [math]::Round($os2.TotalVisibleMemorySize / 1MB, 1)
+    $freeRAM  = [math]::Round($os2.FreePhysicalMemory / 1MB, 1)
+    $usedPct  = [math]::Round((($totalRAM - $freeRAM) / $totalRAM) * 100, 0)
+
+    if ($totalRAM -ge 28) {
+        AddResult "RAM" "RAM Size" "PASS" "$totalRAM GB"
+    } elseif ($totalRAM -ge 14) {
+        AddResult "RAM" "RAM Size" "WARN" "$totalRAM GB"
+    } else {
+        AddResult "RAM" "RAM Size" "FAIL" "$totalRAM GB"
+    }
+
+    if ($usedPct -lt 60) {
+        AddResult "RAM" "RAM Usage" "PASS" "$usedPct%"
+    } elseif ($usedPct -lt 85) {
+        AddResult "RAM" "RAM Usage" "WARN" "$usedPct%"
+    } else {
+        AddResult "RAM" "RAM Usage" "FAIL" "$usedPct%"
+    }
+
+    $ramSpeed = (Get-CimInstance Win32_PhysicalMemory | Select-Object -First 1).Speed
+    if ($ramSpeed -ge 2666) {
+        AddResult "RAM" "RAM Speed" "PASS" "$ramSpeed MHz"
+    } else {
+        AddResult "RAM" "RAM Speed" "WARN" "$ramSpeed MHz"
+    }
+} catch {
+    AddResult "RAM" "RAM Check" "FAIL" "Could not read RAM info"
+}
+
+# ---------------- GPU ----------------
+try {
+    $gpu = Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notlike "*Basic*" } | Select-Object -First 1
+    if ($gpu.Name -like "*4060*") {
+        AddResult "GPU" "GPU Model" "PASS" $gpu.Name
+    } else {
+        AddResult "GPU" "GPU Model" "WARN" $gpu.Name
+    }
+
+    if ($gpu.DriverVersion) {
+        AddResult "GPU" "Driver Installed" "PASS" $gpu.DriverVersion
+    } else {
+        AddResult "GPU" "Driver" "FAIL" "Missing driver"
+    }
+} catch {
+    AddResult "GPU" "GPU Check" "FAIL" "Could not read GPU info"
+}
+
+# ---------------- STORAGE ----------------
+try {
+    $disk = Get-CimInstance Win32_DiskDrive
+    $totalDiskGB = [math]::Round(($disk | Measure-Object Size -Sum).Sum / 1GB, 0)
+
+    if ($totalDiskGB -ge 900) {
+        AddResult "Storage" "Total Storage" "PASS" "$totalDiskGB GB"
+    } elseif ($totalDiskGB -ge 400) {
+        AddResult "Storage" "Total Storage" "WARN" "$totalDiskGB GB"
+    } else {
+        AddResult "Storage" "Total Storage" "FAIL" "$totalDiskGB GB"
+    }
+
+    $c = Get-PSDrive C
+    $usedPct = [math]::Round(($c.Used / ($c.Used + $c.Free)) * 100, 0)
+
+    if ($usedPct -lt 80) {
+        AddResult "Storage" "C Drive Usage" "PASS" "$usedPct%"
+    } elseif ($usedPct -lt 90) {
+        AddResult "Storage" "C Drive Usage" "WARN" "$usedPct%"
+    } else {
+        AddResult "Storage" "C Drive Usage" "FAIL" "$usedPct%"
+    }
+} catch {
+    AddResult "Storage" "Storage Check" "FAIL" "Could not read storage"
+}
+
+# ---------------- NETWORK ----------------
+try {
+    if (Test-Connection 8.8.8.8 -Count 1 -Quiet) {
+        AddResult "Network" "Internet" "PASS" "Connected"
+    } else {
+        AddResult "Network" "Internet" "FAIL" "No connection"
+    }
+} catch {
+    AddResult "Network" "Network Check" "FAIL" "Error testing network"
+}
+
+# ---------------- BUILD REPORT ----------------
+$totalTests = $PassCount + $FailCount + $WarnCount
+$score = if ($totalTests -gt 0) { [math]::Round(($PassCount / $totalTests) * 100, 0) } else { 0 }
+
+$report = @()
+$report += "================================================="
+$report += "PC HEALTH CHECK REPORT"
+$report += "$(Get-Date)"
+$report += "================================================="
+$report += ""
+$report += "Score: $score% ($PassCount / $totalTests passed)"
+$report += ""
+
+foreach ($r in $Results) {
+    $report += "$($r.Icon) $($r.Category) - $($r.Label)"
+    $report += "    -> $($r.Detail)"
+}
+
+$report += ""
+$report += "Saved to: $ReportFile"
+
+Clear-Host
+$report | ForEach-Object { Write-Host $_ }
+$report | Out-File $ReportFile -Encoding UTF8
+
+Write-Host ""
+Write-Host "Report saved to Desktop." -ForegroundColor Green
+Pause
