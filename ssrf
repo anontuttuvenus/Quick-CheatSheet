@@ -1,0 +1,34 @@
+metadata:
+  language: v2-beta
+  name: "Next.js Host Header SSRF Callback Probe"
+  description: "Uses Burp Collaborator to detect possible outbound callbacks caused by trusted Host headers"
+  author: "s3c4n0n"
+  tags: "nextjs", "ssrf", "host-header", "collaborator"
+
+define:
+  collaborator_host = {generate_collaborator_address()}
+
+given request then
+  send request called host_ssrf:
+    replacing method: "GET"
+    replacing headers:
+      "Host": {collaborator_host},
+      "X-Forwarded-Host": {collaborator_host},
+      "X-Forwarded-Proto": "https"
+
+  if http interactions then
+    report issue:
+      name: "Possible Host header SSRF"
+      severity: high
+      confidence: firm
+      remediation: "Do not construct server-side fetches or redirects from untrusted Host/X-Forwarded-Host headers. Normalize trusted hostnames at the proxy layer and upgrade affected Next.js versions."
+      detail: "Burp Collaborator received an HTTP interaction after sending attacker-controlled Host/X-Forwarded-Host values. Manually verify the source and impact."
+  else if dns interactions then
+    report issue:
+      name: "Possible Host header SSRF DNS interaction"
+      severity: medium
+      confidence: tentative
+      remediation: "Review server-side fetch, redirect, image, metadata, and server action logic that may trust Host/X-Forwarded-Host headers."
+      detail: "Burp Collaborator received a DNS interaction after sending attacker-controlled Host/X-Forwarded-Host values. Manually verify whether this is exploitable SSRF or only infrastructure resolution."
+  end if
+end if
