@@ -1,0 +1,17 @@
+metadata:
+  language: v2-beta
+  name: "Next.js __NEXT_DATA__ Sensitive Data Leak"
+  description: "Passive check for sensitive keywords inside Next.js bootstrap JSON"
+  author: "s3c4n0n"
+  tags: "nextjs", "__NEXT_DATA__", "info-disclosure", "passive"
+
+given response then
+  if {base.response.body} matches "__NEXT_DATA__" and {base.response.body} matches "(?i)(access_token|refresh_token|id_token|secret|password|passwd|apiKey|api_key|authorization|bearer|private_key|client_secret|aws_access_key|aws_secret|session|jwt)" then
+    report issue:
+      name: "Potential sensitive data in __NEXT_DATA__"
+      severity: high
+      confidence: tentative
+      remediation: "Audit getServerSideProps, getInitialProps, server components, and API responses. Never pass secrets, tokens, credentials, or internal authorization data to client-side props."
+      detail: "The response contains __NEXT_DATA__ and sensitive-looking keywords. Manually inspect the bootstrap JSON to confirm whether real secrets, tokens, credentials, or authorization data are exposed."
+  end if
+end if
