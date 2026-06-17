@@ -1,0 +1,28 @@
+metadata:
+  language: v2-beta
+  name: "Next.js Forwarded Host Reflection"
+  description: "Checks whether forwarded host headers are reflected, which may indicate cache poisoning or absolute URL trust issues"
+  author: "s3c4n0n"
+  tags: "nextjs", "cache-poisoning", "host-header", "x-forwarded-host"
+
+define:
+  poison_host = `{random_str(8)}.attacker.example`
+
+given request then
+  send request called host_reflect:
+    replacing method: "GET"
+    replacing headers:
+      "X-Forwarded-Host": {poison_host},
+      "X-Forwarded-Proto": "https",
+      "X-Forwarded-Scheme": "https",
+      "Forwarded": `host={poison_host};proto=https`
+
+  if {host_reflect.response.status_code} is "200" and {host_reflect.response.body} matches {poison_host} then
+    report issue:
+      name: "Forwarded host reflected in response"
+      severity: medium
+      confidence: firm
+      remediation: "Do not trust X-Forwarded-Host, Forwarded, or similar headers from untrusted clients. Configure the reverse proxy/CDN to normalize or strip these headers and ensure cache keys include trusted host values only."
+      detail: `The supplied forwarded host value was reflected in the response body: {poison_host}. Verify whether this response is cacheable and whether the reflected value can poison links, metadata, redirects, password reset URLs, or canonical URLs.`
+  end if
+end if
