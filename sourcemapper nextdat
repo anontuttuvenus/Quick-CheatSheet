@@ -1,0 +1,61 @@
+metadata:
+  language: v2-beta
+  name: "Next.js Static Artifact Exposure"
+  description: "Checks common Next.js source maps, manifests, and static build files"
+  author: "s3c4n0n"
+  tags: "nextjs", "source-map", "info-disclosure", "static"
+
+run for each:
+  next_path =
+    "/_next/static/chunks/main.js.map",
+    "/_next/static/chunks/webpack.js.map",
+    "/_next/static/chunks/framework.js.map",
+    "/_next/static/chunks/pages/_app.js.map",
+    "/_next/static/chunks/pages/_error.js.map",
+    "/_next/static/chunks/pages/index.js.map",
+    "/_next/static/development/_buildManifest.js",
+    "/_next/static/development/_ssgManifest.js",
+    "/_next/static/BUILD_ID",
+    "/_next/server/middleware-manifest.json",
+    "/_next/server/pages-manifest.json",
+    "/_next/server/app-paths-manifest.json",
+    "/_next/server/next-font-manifest.json",
+    "/_next/server/server-reference-manifest.json",
+    "/_next/server/webpack-runtime.js",
+    "/.next/BUILD_ID",
+    "/.next/server/middleware-manifest.json",
+    "/.next/server/pages-manifest.json"
+
+given request then
+  send request called next_static:
+    replacing method: "GET"
+    replacing path: {next_path}
+    removing query_string
+
+  if {next_static.response.status_code} is "200" and {next_static.response.body} matches "\"mappings\"" then
+    report issue and continue:
+      name: "Next.js source map exposed"
+      severity: medium
+      confidence: certain
+      remediation: "Disable production source maps by setting productionBrowserSourceMaps: false and prevent serving .map files publicly."
+      detail: `A Next.js source map appears publicly accessible at {next_path}. Source maps can expose client-side source code, routes, comments, hidden endpoints, and secrets accidentally bundled into frontend code.`
+  end if
+
+  if {next_static.response.status_code} is "200" and {next_static.response.body} matches "middleware-manifest|pages-manifest|sortedMiddleware|middleware" then
+    report issue and continue:
+      name: "Next.js server manifest exposed"
+      severity: medium
+      confidence: firm
+      remediation: "Ensure .next/server artifacts are never served by the web server or CDN. Only _next/static assets should be publicly served."
+      detail: `A Next.js server-side manifest or middleware-related file appears accessible at {next_path}. This can expose internal route structure and middleware configuration.`
+  end if
+
+  if {next_static.response.status_code} is "200" and {next_static.response.body} matches "self\\.__BUILD_MANIFEST|__SSG_MANIFEST" then
+    report issue and continue:
+      name: "Next.js build manifest exposed"
+      severity: low
+      confidence: firm
+      remediation: "This is often expected for Next.js apps, but review exposed routes/chunks for sensitive names and ensure source maps are not exposed."
+      detail: `A Next.js build manifest is accessible at {next_path}. This may reveal routes and chunk names useful for further testing.`
+  end if
+end if
