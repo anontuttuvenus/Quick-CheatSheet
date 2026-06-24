@@ -1,0 +1,66 @@
+Open the page, press F12 → Console, then run this.
+
+const params = new URLSearchParams(location.search);
+
+["locale", "client", "source", "state"].forEach(p => {
+  console.log(p, "=", params.get(p));
+});
+
+const payload = params.get("locale");
+console.log("Payload in DOM?", document.documentElement.outerHTML.includes(payload));
+
+Now test where locale is used:
+
+console.log("html lang =", document.documentElement.lang);
+
+Then search dangerous sinks:
+
+["innerHTML","outerHTML","insertAdjacentHTML","document.write","eval","Function"].forEach(s => {
+  console.log(s, document.documentElement.outerHTML.includes(s));
+});
+
+Better: hook sinks before reloading with payload:
+
+["innerHTML","outerHTML"].forEach(prop => {
+  const desc = Object.getOwnPropertyDescriptor(Element.prototype, prop);
+  Object.defineProperty(Element.prototype, prop, {
+    set(v) {
+      if (String(v).includes("XSS_TEST")) {
+        console.warn("Possible sink:", prop, this, v);
+        debugger;
+      }
+      return desc.set.call(this, v);
+    },
+    get: desc.get
+  });
+});
+
+const oldInsert = Element.prototype.insertAdjacentHTML;
+Element.prototype.insertAdjacentHTML = function(pos, html) {
+  if (String(html).includes("XSS_TEST")) {
+    console.warn("insertAdjacentHTML sink", this, html);
+    debugger;
+  }
+  return oldInsert.call(this, pos, html);
+};
+
+Then browse to:
+
+/login?locale=XSS_TEST"><svg/onload=alert(1)>
+
+If console breaks on debugger, check the call stack. That tells you which JS file/sink used it.
+
+Also do Ctrl+Shift+F in DevTools Sources and search:
+
+URLSearchParams
+queryParams.get
+locale
+innerHTML
+insertAdjacentHTML
+document.write
+
+For your screenshot, likely result is only:
+
+document.documentElement.lang = "fr"
+
+That is not XSS unless the raw locale value is written into HTML/JS somewhere else.
