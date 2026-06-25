@@ -1,0 +1,31 @@
+Yes, you can report it as Low severity.
+
+Use wording like:
+
+Title: Outdated Next.js Version 13.2.3 Detected
+
+Severity: Low
+
+Reason:
+The application is running Next.js 13.2.3, which is affected by multiple public security advisories, including middleware authorization bypass issues. However, black-box PoC testing did not confirm unauthorized access, protected data exposure, SSRF, XSS, source map exposure, or cache poisoning.
+
+Evidence:
+
+Next.js 13.2.3 confirmed from public JS/runtime assets.
+
+Build ID detected: iiZZTx3WpHSPqrvuGmFh1.
+
+Protected routes such as /snap, /pwt, /data-platform redirected to login.
+
+/_next/data/<buildid>/en/data-platform.json returned only login redirect metadata.
+
+x-middleware-subrequest bypass attempts did not expose protected content.
+
+
+Impact:
+An outdated vulnerable framework version increases attack surface. If future routes or middleware logic depend only on vulnerable Next.js behavior, authorization bypass or other issues may become exploitable.
+
+Recommendation:
+Upgrade Next.js to a currently supported patched version. Also block external x-middleware-subrequest headers at the edge/proxy.
+
+Do not report it as Critical unless you can show protected content/data is accessible without authentication.
